@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="max-width:1400px;">
+  <h1 class="page-title">Table Management</h1>
+  <p class="page-sub">Monitor and manage restaurant tables and orders</p>
+
+  <!-- KPIs -->
+  <div class="grid cols-3" style="margin-bottom:24px;">
+    <div class="card kpi">
+      <div class="label">Occupied Tables</div>
+      <div class="value">{{ occupied_tables }}/{{ total_tables }}</div>
+      <div class="hint">{{ total_tables - occupied_tables }} tables available</div>
+    </div>
+
+    <div class="card kpi">
+      <div class="label">Active Orders</div>
+      <div class="value">{{ active_orders }}</div>
+      <div class="hint">Across all tables</div>
+    </div>
+
+    <div class="card kpi">
+      <div class="label">Current Revenue</div>
+      <div class="value" style="color:#16a34a;">
+        ${{ "%.2f"|format(current_revenue) }}
+      </div>
+      <div class="hint">From active tables</div>
+    </div>
+  </div>
+
+  <!-- Tables List -->
+  <div style="display:flex;flex-direction:column;gap:16px;">
+    {% for t in tables %}
+      <div 
+        class="card table-card-full"
+        onclick="openTableDetails({{ t.table_id }})"
+        style="cursor:pointer;padding:20px;transition:all 0.2s;"
+        onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'"
+        onmouseout="this.style.boxShadow='none'"
+      >
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <!-- Left: Table info -->
+          <div>
+            <div style="font-weight:900;font-size:20px;margin-bottom:4px;">
+              Table {{ t.table_number }}
+            </div>
+            <div class="page-sub" style="margin:0;">
+              Capacity: {{ t.capacity }}
+            </div>
+          </div>
+
+          <!-- Right: Status badge -->
+          <div>
+            {% if t.status == 'OCCUPIED' %}
+              <span class="badge" style="background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;">Occupied</span>
+            {% elif t.status == 'AVAILABLE' %}
+              <span class="badge" style="background:#dcfce7;color:#166534;border:1px solid #86efac;">Available</span>
+            {% elif t.status == 'RESERVED' %}
+              <span class="badge" style="background:#fef9c3;color:#854d0e;border:1px solid #fde047;">Reserved</span>
+            {% else %}
+              <span class="badge" style="background:#f3f4f6;color:#374151;border:1px solid #d1d5db;">Closed</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Metrics row -->
+        <div style="display:flex;gap:80px;margin-top:20px;">
+          <div>
+            <div class="page-sub" style="margin:0 0 6px;">Occupancy:</div>
+            <div style="font-weight:800;font-size:18px;">
+              {{ t.occupancy }}/{{ t.capacity }}
+            </div>
+          </div>
+
+          <div>
+            <div class="page-sub" style="margin:0 0 6px;">Parties:</div>
+            <div style="font-weight:800;font-size:18px;">
+              {{ t.parties }}
+            </div>
+          </div>
+
+          <div>
+            <div class="page-sub" style="margin:0 0 6px;">Total Bill:</div>
+            <div style="font-weight:900;font-size:18px;color:#16a34a;">
+              ${{ "%.2f"|format(t.total_bill) }}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Modal -->
+<dialog id="tableDetailsModal" style="border:none;border-radius:18px;max-width:600px;width:92vw;padding:0;">
+  <div style="padding:24px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+      <div>
+        <div id="tdTitle" style="font-weight:900;font-size:24px;">Table - Details</div>
+        <div id="tdSubtitle" class="page-sub" style="margin:6px 0 0;">View all parties and orders for this table</div>
+      </div>
+      <button 
+        onclick="document.getElementById('tableDetailsModal').close()"
+        style="width:40px;height:40px;border-radius:10px;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-size:18px;"
+      >
+        ✕
+      </button>
+    </div>
+
+    <div id="tdBody" style="margin-top:20px;">
+      <div class="page-sub">Loading…</div>
+    </div>
+  </div>
+</dialog>
+
+<script>
+async function openTableDetails(tableId) {
+  const modal = document.getElementById("tableDetailsModal");
+  const body = document.getElementById("tdBody");
+  const title = document.getElementById("tdTitle");
+
+  title.textContent = `Table ${tableId} - Details`;
+  body.innerHTML = `<div class="page-sub">Loading…</div>`;
+  modal.showModal();
+
+  try {
+    const res = await fetch(`/tables/${tableId}/details`);
+    if (!res.ok) throw new Error("Failed to load details");
+    const data = await res.json();
+
+    title.textContent = `Table ${data.table_number} - Details`;
+
+    // Items list
+    const itemsHtml = (data.items || []).length > 0 
+      ? data.items.map(it => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f3f4f6;">
+            <div style="display:flex;gap:12px;align-items:center;">
+              <span style="font-weight:800;min-width:30px;">${it.qty}x</span>
+              <div style="font-weight:600;">${it.name}</div>
+            </div>
+            <div style="font-weight:800;">$${Number(it.price_total).toFixed(2)}</div>
+          </div>
+        `).join("")
+      : `<div class="page-sub" style="padding:20px 0;text-align:center;">No items.</div>`;
+
+    body.innerHTML = `
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:14px;padding:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+          <div style="font-weight:900;font-size:18px;">Party 1</div>
+          <span class="badge" style="background:#ede9fe;color:#6d28d9;border:1px solid #d8b4fe;">
+            ${data.party?.status || "—"}
+          </span>
+        </div>
+        
+        <div class="page-sub" style="margin:0 0 16px;">
+          ${data.party?.guests || 0} guests • Seated at ${data.party?.seated_at || "—"}
+        </div>
+
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:14px;margin-bottom:18px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:36px;height:36px;border-radius:50%;background:#f3f4f6;display:grid;place-items:center;font-weight:800;">
+              👤
+            </div>
+            <div>
+              <div style="font-weight:800;">${data.party?.server_name || "—"}</div>
+              <div class="page-sub" style="margin:2px 0 0;">Server ID: ${data.party?.server_code || "—"}</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="font-weight:900;font-size:16px;margin-bottom:8px;">Order Items</div>
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:0 14px;">
+          ${itemsHtml}
+        </div>
+
+        <div style="margin-top:18px;padding-top:18px;border-top:2px solid #e5e7eb;">
+          <div style="display:flex;justify-content:space-between;margin:8px 0;">
+            <div class="page-sub">Subtotal:</div>
+            <div style="font-weight:800;">$${Number(data.subtotal || 0).toFixed(2)}</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin:8px 0;">
+            <div class="page-sub">Tax:</div>
+            <div style="font-weight:800;">$${Number(data.tax || 0).toFixed(2)}</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid #e5e7eb;">
+            <div style="font-weight:900;font-size:18px;">Total:</div>
+            <div style="font-weight:900;font-size:22px;color:#16a34a;">
+              $${Number(data.total || 0).toFixed(2)}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    body.innerHTML = `<div class="page-sub">Error loading details.</div>`;
+  }
+}
+</script>
+{% endblock %}

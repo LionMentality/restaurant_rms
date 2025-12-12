@@ -1,0 +1,115 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Register - RMS</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body style="display:grid;place-items:center;min-height:100vh;background:var(--bg);padding:20px 0;">
+  <div class="card" style="width:min(600px,92vw);padding:28px;border-radius:18px;">
+    <div style="display:grid;place-items:center;margin-top:6px;">
+      <div class="logo" style="width:56px;height:56px;">🍴</div>
+    </div>
+
+    <h2 style="text-align:center;margin:16px 0 6px;">Create Account</h2>
+    <p class="page-sub" style="text-align:center;margin:0 0 22px;">
+      Register as a new employee
+    </p>
+
+    {% if error %}
+      <div class="card pad" style="border-color:#ffe5ea;background:#fff7f9;margin-bottom:12px;">
+        <span style="color:#be123c;font-weight:700;">{{ error }}</span>
+      </div>
+    {% endif %}
+
+    <form method="post" style="display:flex;flex-direction:column;gap:12px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <div style="font-weight:700;margin:0 0 8px;">First Name</div>
+          <div class="input">
+            <input name="name" placeholder="John" required>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-weight:700;margin:0 0 8px;">Last Name</div>
+          <div class="input">
+            <input name="surname" placeholder="Smith" required>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-weight:700;margin:0 0 8px;">Email</div>
+        <div class="input">
+          <span class="icon">📧</span>
+          <input type="email" name="email" placeholder="john.smith@rms.com" required>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-weight:700;margin:0 0 8px;">Phone Number</div>
+        <div class="input">
+          <span class="icon">📞</span>
+          <input name="phone_number" placeholder="555-0123">
+        </div>
+      </div>
+
+      <div>
+        <div style="font-weight:700;margin:0 0 8px;">Address</div>
+        <div class="input">
+          <span class="icon">🏠</span>
+          <input name="address" placeholder="123 Main St" required>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-weight:700;margin:0 0 8px;">Username</div>
+        <div class="input">
+          <span class="icon">👤</span>
+          <input name="username" placeholder="jsmith" required>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-weight:700;margin:0 0 8px;">Password</div>
+        <div class="input">
+          <span class="icon">🔒</span>
+          <input type="password" name="password" placeholder="Enter password" required>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-weight:700;margin:0 0 8px;">Role</div>
+        <select name="role" class="select" style="width:100%;" required>
+          <option value="staff">Staff</option>
+          <option value="manager">Manager</option>
+        </select>
+      </div>
+
+      <div style="display:none;" id="staffRoleDiv">
+        <div style="font-weight:700;margin:0 0 8px;">Staff Role (Optional)</div>
+        <div class="input">
+          <input name="staff_role" placeholder="Server, Chef, Bartender...">
+        </div>
+      </div>
+
+      <button class="btn dark" style="width:100%;margin-top:6px;">Create Account</button>
+    </form>
+
+    <div style="text-align:center;margin-top:18px;color:var(--muted);">
+      Already have an account? <a href="{{ url_for('login') }}" style="color:#111827;font-weight:700;">Sign in</a>
+    </div>
+  </div>
+
+  <script>
+    const roleSelect = document.querySelector('select[name="role"]');
+    const staffRoleDiv = document.getElementById('staffRoleDiv');
+    
+    roleSelect.addEventListener('change', function() {
+      staffRoleDiv.style.display = this.value === 'staff' ? 'block' : 'none';
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1 class="page-title">Staff Management</h1>
+  <p class="page-sub">Manage your staff members and approve/reject requests</p>
+
+  <div class="card pad" style="margin-top:16px;">
+    <div style="font-weight:900;font-size:18px;">My Staff</div>
+    <div class="page-sub">Staff members assigned to you</div>
+
+    {% if staff_rows|length == 0 %}
+      <div class="page-sub" style="margin-top:12px;">No staff assigned.</div>
+    {% else %}
+      <div style="margin-top:14px;display:flex;flex-direction:column;gap:12px;">
+        {% for s in staff_rows %}
+          <div class="row">
+            <div style="flex:1;">
+              <div class="row-title">{{ s.first_name }} {{ s.last_name }}</div>
+              <div class="row-sub">{{ s.role or "—" }} • {{ s.email or "—" }}</div>
+              <div class="row-sub">{{ s.phone_number or "—" }} • {{ s.address }}</div>
+            </div>
+            <div>
+              {% if s.is_active %}
+                <span class="badge dark">Active</span>
+              {% else %}
+                <span class="badge gray">Inactive</span>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="card pad" style="margin-top:16px;">
+    <div style="font-weight:900;font-size:18px;">Requests</div>
+    <div class="page-sub">Time off / availability / overtime requests</div>
+
+    {% if req_rows|length == 0 %}
+      <div class="page-sub" style="margin-top:12px;">No requests yet.</div>
+    {% else %}
+      <div style="margin-top:14px;display:flex;flex-direction:column;gap:12px;">
+        {% for r in req_rows %}
+          <div class="row">
+            <div style="flex:1;">
+              <div class="row-title">{{ r.staff_name }} {{ r.staff_surname }}</div>
+              <div class="row-sub">
+                {{ r.request_type }} • {{ r.request_date }} • Status: {{ r.status }}
+              </div>
+
+              <div class="row-sub" style="margin-top:6px;">
+                {% if r.start_date %}From {{ r.start_date }}{% endif %}
+                {% if r.end_date %} to {{ r.end_date }}{% endif %}
+                {% if r.start_time %} • {{ r.start_time }}{% endif %}
+                {% if r.end_time %} - {{ r.end_time }}{% endif %}
+                {% if r.extra_time %} • Extra: {{ r.extra_time }} mins{% endif %}
+              </div>
+
+              {% if r.reason %}
+                <div class="page-sub" style="margin-top:8px;">“{{ r.reason }}”</div>
+              {% endif %}
+            </div>
+
+            <div style="display:flex;gap:10px;align-items:center;">
+              {% if r.status == 'PENDING' %}
+                <form method="post" action="{{ url_for('update_staff_request_status') }}">
+                  <input type="hidden" name="request_id" value="{{ r.request_id }}">
+                  <input type="hidden" name="status" value="APPROVED">
+                  <button class="btn dark" type="submit">Approve</button>
+                </form>
+
+                <form method="post" action="{{ url_for('update_staff_request_status') }}">
+                  <input type="hidden" name="request_id" value="{{ r.request_id }}">
+                  <input type="hidden" name="status" value="REJECTED">
+                  <button class="btn gray" type="submit">Reject</button>
+                </form>
+              {% else %}
+                <span class="badge gray">{{ r.status }}</span>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

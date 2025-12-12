@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1 class="page-title">Waste Management</h1>
+  <p class="page-sub">Track and analyze food waste and expired inventory</p>
+
+  <div class="grid cols-3">
+    <div class="card kpi">
+      <div class="label">Total Waste Items</div>
+      <div class="value">{{ total_waste_items }}</div>
+      <div class="hint">Distinct ingredients wasted</div>
+    </div>
+
+    <div class="card kpi">
+      <div class="label">Estimated Cost Loss</div>
+      <div class="value red">${{ "%.2f"|format(total_waste_cost) }}</div>
+      <div class="hint">Total value of wasted items</div>
+    </div>
+
+    <div class="card kpi">
+      <div class="label">Most Common Reason</div>
+      <div class="value">{{ most_common_reason }}</div>
+      <div class="hint">Primary waste cause</div>
+    </div>
+  </div>
+
+  <div class="card pad" style="margin-top:16px;">
+    <div style="font-weight:900;font-size:18px;">Waste Entries</div>
+    <div class="page-sub">Most recent first</div>
+
+    {% if rows|length == 0 %}
+      <div class="card pad" style="margin-top:14px;">
+        <b>No waste entries yet.</b>
+        <div class="page-sub" style="margin-top:6px;">Add rows to waste_tracking to see this page.</div>
+      </div>
+    {% else %}
+      <div style="margin-top:14px;display:flex;flex-direction:column;gap:12px;">
+        {% for r in rows %}
+          <div class="row">
+            <div style="flex:1;">
+              <div class="row-title">{{ r.ingredient_name }}</div>
+              <div class="row-sub">
+                {{ r.waste_date }} • Qty: {{ r.amount_wasted }} • Reason: {{ r.reason or "—" }}
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-weight:900;color:#ef4444;">
+                ${{ "%.2f"|format(r.waste_cost) }}
+              </div>
+              <div class="row-sub">
+                Unit: ${{ "%.2f"|format(r.average_unit_cost) }}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>{{ title or "RMS" }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script defer src="{{ url_for('static', filename='js/app.js') }}"></script>
+</head>
+<body>
+  <div class="container">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">🍴</div>
+        <span>RMS</span>
+      </div>
+
+      <div class="usercard" style="cursor:pointer;" onclick="window.location.href='{{ url_for('profile') }}'">
+        <div class="username">{{ session.get("full_name","John Smith") }}</div>
+        <div class="rolebadge">{{ session.get("role","Manager")|capitalize }}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;">Click to view profile</div>
+      </div>
+
+      <nav class="nav">
+        <a class="{{ 'active' if active=='dashboard' else '' }}" href="{{ url_for('dashboard') }}">
+          <span class="icon">🏠</span> Dashboard
+        </a>
+        <a class="{{ 'active' if active=='menu' else '' }}" href="{{ url_for('menu_page') }}">
+          <span class="icon">📖</span> Menu
+        </a>
+        <a class="{{ 'active' if active=='schedule' else '' }}" href="{{ url_for('schedule_page') }}">
+          <span class="icon">📅</span> Schedule
+        </a>
+        <a class="{{ 'active' if active=='inventory' else '' }}" href="{{ url_for('inventory_page') }}">
+          <span class="icon">📦</span> Inventory Management
+        </a>
+        <a class="{{ 'active' if active=='waste' else '' }}" href="{{ url_for('waste_page') }}">
+          <span class="icon">🗑️</span> Waste Management
+        </a>
+        <a class="{{ 'active' if active=='tables' else '' }}" href="{{ url_for('tables_page') }}">
+          <span class="icon">🍽️</span> Table Management
+        </a>
+        <a class="{{ 'active' if active=='staff' else '' }}" href="{{ url_for('staff_management_page') }}">
+          <span class="icon">👥</span> Staff Management
+        </a>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <a class="logout" href="{{ url_for('logout') }}">
+          <span class="icon">🚪</span> Logout
+        </a>
+      </div>
+    </aside>
+
+    <main class="main">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</body>
+</html>

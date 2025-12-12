@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="max-width:800px;">
+  <h1 class="page-title">My Profile</h1>
+  <p class="page-sub">View and update your personal information</p>
+
+  {% if success %}
+    <div class="card pad" style="border-color:#d1fae5;background:#f0fdf4;margin-bottom:16px;">
+      <span style="color:#166534;font-weight:700;">✓ {{ success }}</span>
+    </div>
+  {% endif %}
+
+  {% if error %}
+    <div class="card pad" style="border-color:#ffe5ea;background:#fff7f9;margin-bottom:16px;">
+      <span style="color:#be123c;font-weight:700;">{{ error }}</span>
+    </div>
+  {% endif %}
+
+  <div class="card pad">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
+      <div>
+        <div style="font-weight:900;font-size:24px;">{{ user.name }} {{ user.surname }}</div>
+        <div class="page-sub" style="margin:4px 0 0;">Employee ID: #{{ user.employee_id }}</div>
+      </div>
+      <div>
+        <span class="badge dark">{{ user.role|capitalize }}</span>
+      </div>
+    </div>
+
+    <form method="post" style="display:flex;flex-direction:column;gap:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div>
+          <div style="font-weight:700;margin:0 0 8px;">First Name</div>
+          <div class="input">
+            <input name="name" value="{{ user.name }}" required>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-weight:700;margin:0 0 8px;">Last Name</div>
+          <div class="input">
+            <input name="surname" value="{{ user.surname }}" required>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-weight:700;margin:0 0 8px;">Email</div>
+        <div class="input">
+          <span class="icon">📧</span>
+          <input type="email" name="email" value="{{ user.email or '' }}">
+        </div>
+      </div>
+
+      <div>
+        <div style="font-weight:700;margin:0 0 8px;">Phone Number</div>
+        <div class="input">
+          <span class="icon">📞</span>
+          <input name="phone_number" value="{{ user.phone_number or '' }}">
+        </div>
+      </div>
+
+      <div>
+        <div style="font-weight:700;margin:0 0 8px;">Address</div>
+        <div class="input">
+          <span class="icon">🏠</span>
+          <input name="address" value="{{ user.address }}" required>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-weight:700;margin:0 0 8px;">Username</div>
+        <div class="input" style="background:#f3f4f6;">
+          <span class="icon">👤</span>
+          <input value="{{ user.username }}" disabled>
+        </div>
+        <div class="page-sub" style="margin:4px 0 0;">Username cannot be changed</div>
+      </div>
+
+      {% if user.role == 'staff' and user.staff_role %}
+        <div>
+          <div style="font-weight:700;margin:0 0 8px;">Role</div>
+          <div class="input" style="background:#f3f4f6;">
+            <input value="{{ user.staff_role }}" disabled>
+          </div>
+        </div>
+      {% endif %}
+
+      {% if user.role == 'staff' and user.manager_name %}
+        <div>
+          <div style="font-weight:700;margin:0 0 8px;">Manager</div>
+          <div class="card pad" style="background:#f9fafb;">
+            <div style="font-weight:800;">{{ user.manager_name }}</div>
+            <div class="page-sub" style="margin:4px 0 0;">{{ user.manager_email or 'No email' }}</div>
+          </div>
+        </div>
+      {% endif %}
+
+      <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px;">
+        <button type="button" class="btn gray" onclick="window.location.href='{{ url_for('dashboard') }}'">
+          Cancel
+        </button>
+        <button type="submit" class="btn dark">
+          Save Changes
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Change Password Section -->
+  <div class="card pad" style="margin-top:16px;">
+    <div style="font-weight:900;font-size:18px;margin-bottom:4px;">Change Password</div>
+    <div class="page-sub" style="margin:0 0 16px;">Update your account password</div>
+
+    <form method="post" action="{{ url_for('change_password') }}" style="display:flex;flex-direction:column;gap:12px;">
+      <div>
+        <div style="font-weight:700;margin:0 0 8px;">Current Password</div>
+        <div class="input">
+          <span class="icon">🔒</span>
+          <input type="password" name="current_password" required>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-weight:700;margin:0 0 8px;">New Password</div>
+        <div class="input">
+          <span class="icon">🔒</span>
+          <input type="password" name="new_password" required>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-weight:700;margin:0 0 8px;">Confirm New Password</div>
+        <div class="input">
+          <span class="icon">🔒</span>
+          <input type="password" name="confirm_password" required>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;">
+        <button type="submit" class="btn dark">Update Password</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

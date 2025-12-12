@@ -1,0 +1,48 @@
+# Environnement virtuel Python
+.venv/
+venv/
+env/
+ENV/
+
+# Cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Variables d'environnement (IMPORTANT - contient vos secrets!)
+.env
+
+# Base de données locale (à ne pas versionner)
+*.db
+*.sqlite
+*.sqlite3
+
+# Fichiers de log
+*.log
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+*~
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Coverage et tests
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Fichiers temporaires
+tmp/
+temp/
+*.tmp

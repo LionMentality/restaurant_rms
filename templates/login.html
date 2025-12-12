@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Login - RMS</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body style="display:grid;place-items:center;min-height:100vh;background:var(--bg);">
+  <div class="card" style="width:min(560px,92vw);padding:28px;border-radius:18px;">
+    <div style="display:grid;place-items:center;margin-top:6px;">
+      <div class="logo" style="width:56px;height:56px;">🍴</div>
+    </div>
+
+    <h2 style="text-align:center;margin:16px 0 6px;">Restaurant Management System</h2>
+    <p class="page-sub" style="text-align:center;margin:0 0 22px;">
+      Enter your employee credentials to access the system
+    </p>
+
+    {% if error %}
+      <div class="card pad" style="border-color:#ffe5ea;background:#fff7f9;margin-bottom:12px;">
+        <span style="color:#be123c;font-weight:700;">{{ error }}</span>
+      </div>
+    {% endif %}
+
+    <form method="post" style="display:flex;flex-direction:column;gap:12px;">
+      <div>
+        <div style="font-weight:700;margin:0 0 8px;">Username</div>
+        <div class="input">
+          <span class="icon">👤</span>
+          <input name="username" placeholder="Enter your username" required>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-weight:700;margin:0 0 8px;">Password</div>
+        <div class="input">
+          <span class="icon">🔒</span>
+          <input type="password" name="password" placeholder="Enter your password" required>
+        </div>
+      </div>
+
+      <button class="btn dark" style="width:100%;margin-top:6px;">Sign In</button>
+    </form>
+
+    <div style="text-align:center;margin-top:18px;color:var(--muted);">
+      Don't have an account? <a href="{{ url_for('register') }}" style="color:#111827;font-weight:700;">Register here</a>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1 class="page-title">Inventory Management</h1>
+  <p class="page-sub">Track and manage restaurant inventory items</p>
+
+  <div class="grid cols-3">
+    <div class="card kpi">
+      <div class="label">Total Items</div>
+      <div class="value">{{ total_items }}</div>
+      <div class="hint">Across all ingredients</div>
+    </div>
+
+    <div class="card kpi">
+      <div class="label">Low Stock Items</div>
+      <div class="value red">{{ low_stock_items }}</div>
+      <div class="hint">Below minimum threshold</div>
+    </div>
+
+    <div class="card kpi">
+      <div class="label">Expiring Soon</div>
+      <div class="value orange">{{ expiring_soon }}</div>
+      <div class="hint">Within the next 7 days</div>
+    </div>
+  </div>
+
+  <form class="search-row" method="get" action="{{ url_for('inventory_page') }}">
+    <div class="input" style="flex:1;">
+      <span class="icon">🔍</span>
+      <input name="q" value="{{ q }}" placeholder="Search inventory items...">
+    </div>
+  </form>
+
+  {% if items|length == 0 %}
+    <div class="card pad" style="margin-top:14px;">
+      <b>No inventory items found.</b>
+      <div class="page-sub" style="margin-top:6px;">
+        Either your inventory is empty or your search returned no results.
+      </div>
+    </div>
+  {% endif %}
+
+  {% for it in items %}
+    <div class="card pad" style="margin-top:12px;">
+      <div class="row" style="border:none;padding:0;">
+        <div style="flex:1;">
+          <div class="row-title">{{ it.ingredient_name }}</div>
+          <div class="row-sub">{{ it.unit }}</div>
+
+          <div style="display:flex;gap:40px;margin-top:14px;color:var(--muted);flex-wrap:wrap;">
+            <div>
+              <div>Current Quantity</div>
+              <div style="color:var(--text);font-weight:800;margin-top:6px;">
+                {{ it.current_quantity }} {{ it.unit }}
+              </div>
+            </div>
+
+            <div>
+              <div>Min. Quantity</div>
+              <div style="color:var(--text);font-weight:800;margin-top:6px;">
+                {{ it.minimum_stock_threshold }} {{ it.unit }}
+              </div>
+            </div>
+
+            <div>
+              <div>Last Updated</div>
+              <div style="color:var(--text);font-weight:800;margin-top:6px;">
+                {{ it.last_update_date }}
+              </div>
+            </div>
+
+            <div>
+              <div>Expiration Date</div>
+              <div style="color:var(--text);font-weight:800;margin-top:6px;">
+                {{ it.expiration_date or "—" }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;">
+          {% if it.is_low_stock %}<span class="badge orange">Low Stock</span>{% else %}<span class="badge gray">In Stock</span>{% endif %}
+          {% if it.is_expired %}<span class="badge red">Expired</span>{% endif %}
+          {% if (not it.is_expired) and it.is_expiring_soon %}<span class="badge yellow">Expiring Soon</span>{% endif %}
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+{% endblock %}

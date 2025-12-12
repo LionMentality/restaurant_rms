@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="max-width:1200px;">
+  <h1 class="page-title">Schedule</h1>
+  <p class="page-sub">View your weekly schedule and manage time off requests</p>
+
+  <!-- Alert for pending requests (managers only) -->
+  {% if session.get("role") == "manager" and pending_count > 0 %}
+    <div class="card pad" style="background:#eff6ff;border-color:#bfdbfe;margin-bottom:20px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-size:20px;">ℹ️</span>
+        <span style="color:#1e40af;font-weight:600;">
+          You have {{ pending_count }} pending shift exchange request(s) that need your approval.
+        </span>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Weekly Schedule Card -->
+  <div class="card pad">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
+      <div>
+        <div style="font-weight:900;font-size:20px;">Weekly Schedule</div>
+        <div class="page-sub" style="margin:4px 0 0;">
+          Week of {{ week_start.strftime("%B %d") }} - {{ week_end.strftime("%B %d, %Y") }}
+        </div>
+      </div>
+      
+      <div style="display:flex;gap:10px;">
+        <button 
+          class="btn gray" 
+          onclick="document.getElementById('modalShiftExchange').showModal()"
+          style="display:flex;align-items:center;gap:8px;"
+        >
+          <span>🔄</span> Request Shift Exchange
+        </button>
+        <button 
+          class="btn dark"
+          onclick="document.getElementById('modalCalendar').showModal()"
+          style="display:flex;align-items:center;gap:8px;"
+        >
+          <span>📅</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Days Grid -->
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      {% for day in week_days %}
+        {% set day_key = day.isoformat() %}
+        {% set shifts = shifts_by_day.get(day_key, []) %}
+        
+        <div class="card" style="padding:18px;background:#f9fafb;border:1px solid #e5e7eb;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;">
+            <!-- Left: Day + Date -->
+            <div style="min-width:120px;">
+              <div style="font-weight:800;font-size:16px;">{{ day.strftime("%A") }}</div>
+              <div class="page-sub" style="margin:2px 0 0;">{{ day.strftime("%b %d") }}</div>
+            </div>
+
+            <!-- Middle: Shift info or Day Off -->
+            {% if shifts|length > 0 %}
+              <div style="flex:1;display:flex;align-items:center;gap:12px;">
+                <span style="color:#6b7280;font-size:20px;">🕐</span>
+                <div style="flex:1;">
+                  {% for shift in shifts %}
+                    <div style="font-weight:700;font-size:16px;">{{ shift.assigned_role or "Shift" }}</div>
+                    <div style="color:#6b7280;margin-top:2px;">
+                      {{ shift.start_time.strftime("%I:%M %p") if shift.start_time else "" }} - 
+                      {{ shift.end_time.strftime("%I:%M %p") if shift.end_time else "" }}
+                    </div>
+                    
+                    {% if shift.is_exchanged %}
+                      <div style="margin-top:6px;color:#2563eb;font-size:13px;">
+                        <span style="font-weight:600;">🔄 Exchanged</span>
+                        <br>Temporary - Exchanged with {{ shift.exchange_partner or "Another staff" }}
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              </div>
+
+              <!-- Right: Status badge -->
+              <div>
+                {% if shifts[0].is_exchanged %}
+                  <span class="badge" style="background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;margin-right:8px;">
+                    🔄 Exchanged
+                  </span>
+                {% endif %}
+                <span class="badge dark">Scheduled</span>
+              </div>
+            {% else %}
+              <!-- No shift = Day Off -->
+              <div style="flex:1;display:flex;align-items:center;gap:12px;">
+                <span style="color:#6b7280;font-size:20px;">🕐</span>
+                <div style="flex:1;">
+                  <div style="font-weight:700;font-size:16px;color:#6b7280;">Day Off</div>
+                </div>
+              </div>
+              <div>
+                <span class="badge gray">Day Off</span>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- My Requests Section -->
+  <div class="card pad" style="margin-top:20px;">
+    <div style="font-weight:900;font-size:18px;margin-bottom:4px;">My Requests</div>
+    <div class="page-sub" style="margin:0 0 16px;">Track your time off and shift exchange requests</div>
+
+    {% if requests_rows|length == 0 %}
+      <div class="card pad" style="background:#f9fafb;text-align:center;padding:30px;">
+        <div style="font-size:40px;margin-bottom:10px;">📋</div>
+        <div style="color:#6b7280;font-weight:600;">No requests yet</div>
+        <div class="page-sub" style="margin-top:6px;">Your time off and shift requests will appear here</div>
+      </div>
+    {% else %}
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        {% for r in requests_rows %}
+          <div class="card pad" style="background:#fff;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;">
+              <div style="flex:1;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+                  <div style="font-weight:900;font-size:16px;">{{ r.request_type.replace('_', ' ').title() }}</div>
+                  <span class="badge {% if r.status == 'PENDING' %}gray{% elif r.status == 'APPROVED' %}green{% else %}red{% endif %}">
+                    {{ r.status }}
+                  </span>
+                </div>
+                
+                <div class="page-sub">
+                  {% if r.start_date %}{{ r.start_date }}{% endif %}
+                  {% if r.end_date and r.end_date != r.start_date %} → {{ r.end_date }}{% endif %}
+                  {% if r.start_time %} • {{ r.start_time }}{% endif %}
+                  {% if r.end_time %} - {{ r.end_time }}{% endif %}
+                  {% if r.extra_time %} • +{{ r.extra_time }} minutes{% endif %}
+                </div>
+                
+                {% if r.reason %}
+                  <div style="margin-top:8px;padding:10px;background:#f9fafb;border-radius:8px;font-size:14px;">
+                    "{{ r.reason }}"
+                  </div>
+                {% endif %}
+              </div>
+
+              <div style="text-align:right;">
+                <div class="page-sub">Requested</div>
+                <div style="font-weight:700;margin-top:2px;">{{ r.request_date }}</div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Shift Exchange Modal -->
+<dialog id="modalShiftExchange" style="border:none;border-radius:18px;max-width:500px;width:92vw;padding:0;">
+  <div style="padding:24px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+      <div>
+        <div style="font-weight:900;font-size:20px;">Request Shift Exchange</div>
+        <div class="page-sub" style="margin:4px 0 0;">Request to exchange your shift with another staff member</div>
+      </div>
+      <button 
+        onclick="document.getElementById('modalShiftExchange').close()"
+        style="width:40px;height:40px;border-radius:10px;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-size:18px;"
+      >
+        ✕
+      </button>
+    </div>
+
+    <form method="post" action="{{ url_for('request_timeoff') }}" style="display:flex;flex-direction:column;gap:14px;">
+      <input type="hidden" name="request_type" value="TIME_OFF">
+      
+      <div>
+        <div style="font-weight:700;margin:0 0 8px;">Start Date</div>
+        <input type="date" name="start_date" required style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+      </div>
+
+      <div>
+        <div style="font-weight:700;margin:0 0 8px;">End Date</div>
+        <input type="date" name="end_date" required style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+      </div>
+
+      <div>
+        <div style="font-weight:700;margin:0 0 8px;">Reason (Optional)</div>
+        <textarea name="reason" rows="3" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;font-family:inherit;"></textarea>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+        <button type="button" class="btn gray" onclick="document.getElementById('modalShiftExchange').close()">
+          Cancel
+        </button>
+        <button type="submit" class="btn dark">Submit Request</button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<!-- Calendar Modal (placeholder) -->
+<dialog id="modalCalendar" style="border:none;border-radius:18px;max-width:400px;width:92vw;padding:24px;">
+  <div style="text-align:center;">
+    <div style="font-size:48px;margin-bottom:16px;">📅</div>
+    <div style="font-weight:900;font-size:20px;margin-bottom:8px;">Calendar View</div>
+    <div class="page-sub">Coming soon...</div>
+    <button class="btn dark" onclick="document.getElementById('modalCalendar').close()" style="margin-top:20px;">
+      Close
+    </button>
+  </div>
+</dialog>
+
+<style>
+.badge.green {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+</style>
+{% endblock %}

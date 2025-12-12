@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1 class="page-title">Welcome to Restaurant Management System</h1>
+
+  <div class="grid cols-3">
+    <a class="card navcard" href="{{ url_for('menu_page') }}">
+      <div class="top"><span style="color:var(--accent)">📖</span> Menu</div>
+      <div class="desc">Click to access menu</div>
+    </a>
+
+    <a class="card navcard" href="{{ url_for('schedule_page') }}">
+      <div class="top"><span style="color:var(--accent)">📅</span> Schedule</div>
+      <div class="desc">Click to access schedule</div>
+    </a>
+
+    <a class="card navcard" href="{{ url_for('inventory_page') }}">
+      <div class="top"><span style="color:var(--accent)">📦</span> Inventory Management</div>
+      <div class="desc">Click to access inventory management</div>
+    </a>
+
+    <a class="card navcard" href="{{ url_for('waste_page') }}">
+      <div class="top"><span style="color:var(--accent)">🗑️</span> Waste Management</div>
+      <div class="desc">Click to access waste management</div>
+    </a>
+
+    <a class="card navcard" href="{{ url_for('tables_page') }}">
+      <div class="top"><span style="color:var(--accent)">🍽️</span> Table Management</div>
+      <div class="desc">Click to access table management</div>
+    </a>
+
+    <a class="card navcard" href="{{ url_for('staff_management_page') }}">
+      <div class="top"><span style="color:var(--accent)">👥</span> Staff Management</div>
+      <div class="desc">Click to access staff management</div>
+    </a>
+  </div>
+{% endblock %}

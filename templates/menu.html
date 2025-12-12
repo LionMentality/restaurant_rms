@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="page-title">Menu</h1>
+<p class="page-sub">Friday, December 12, 2025</p>
+
+{% for category, items in menu.items() %}
+  <h2 style="margin:26px 0 12px;">{{ category }}</h2>
+
+  <div class="grid cols-3">
+    {% for item in items %}
+      <div class="card pad" style="{{ 'opacity:.55' if not item.is_available else '' }}">
+        <div style="display:flex;justify-content:space-between;gap:12px;">
+          <div style="font-weight:800;font-size:18px;">{{ item.name }}</div>
+
+          {% if item.is_available %}
+            <span class="badge dark">Available</span>
+          {% else %}
+            <span class="badge gray">Sold Out</span>
+          {% endif %}
+        </div>
+
+        <div class="page-sub" style="margin:8px 0 14px;">
+          {{ item.description }}
+        </div>
+
+        <div style="color:var(--accent);font-weight:800;">
+          ${{ "%.2f"|format(item.menu_price) }}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endfor %}
+{% endblock %}
