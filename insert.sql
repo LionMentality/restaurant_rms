@@ -14,7 +14,7 @@ INSERT INTO employee (name, surname, phone_number, email, address, salary, usern
 
 -- Staff (Servers)
 ('Emily', 'Williams', '555-0100', 'emily.w@rms.com', '789 Pine Rd, Brooklyn, NY 11201', 35000.00, 'ewilliams', 'scrypt:32768:8:1$H6KIWGTKquIiaOwf$efdef9b44c81324355c00dcf0f2bfe1b496b3abb814e4c480eca05abab4ddf3a9d371f5deb0f681b291e4b8b85a75f342920ea75be23f4ff6078783b710a468f', TRUE),
-('Michael', 'Chen', '555-0101', 'michael.c@rms.com', '321 Elm St, Brooklyn, NY 11202', 33000.00, 'scrypt:32768:8:1$H6KIWGTKquIiaOwf$efdef9b44c81324355c00dcf0f2bfe1b496b3abb814e4c480eca05abab4ddf3a9d371f5deb0f681b291e4b8b85a75f342920ea75be23f4ff6078783b710a468f', TRUE),
+('Michael', 'Chen', '555-0101', 'michael.c@rms.com', '321 Elm St, Brooklyn, NY 11202', 33000.00, 'mchen', 'scrypt:32768:8:1$H6KIWGTKquIiaOwf$efdef9b44c81324355c00dcf0f2bfe1b496b3abb814e4c480eca05abab4ddf3a9d371f5deb0f681b291e4b8b85a75f342920ea75be23f4ff6078783b710a468f', TRUE),
 ('David', 'Martinez', '555-0102', 'david.m@rms.com', '654 Maple Dr, Queens, NY 11354', 34000.00, 'dmartinez', 'scrypt:32768:8:1$H6KIWGTKquIiaOwf$efdef9b44c81324355c00dcf0f2bfe1b496b3abb814e4c480eca05abab4ddf3a9d371f5deb0f681b291e4b8b85a75f342920ea75be23f4ff6078783b710a468f', TRUE),
 ('Lisa', 'Anderson', '555-0103', 'lisa.a@rms.com', '987 Cedar Ln, Queens, NY 11355', 33500.00, 'landerson', 'scrypt:32768:8:1$H6KIWGTKquIiaOwf$efdef9b44c81324355c00dcf0f2bfe1b496b3abb814e4c480eca05abab4ddf3a9d371f5deb0f681b291e4b8b85a75f342920ea75be23f4ff6078783b710a468f', TRUE),
 
