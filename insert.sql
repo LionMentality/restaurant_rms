@@ -1,37 +1,29 @@
--- ==========================================
--- SEED DATA - Restaurant Management System
--- Données complètes pour nouvelle installation
--- ==========================================
 
 USE rms;
 
--- Désactiver les contraintes FK temporairement
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ==========================================
 -- 1. EMPLOYEES (Managers + Staff)
 -- ==========================================
 
--- IMPORTANT : Les password_hash ci-dessous sont pour le mot de passe "password123"
--- Généré avec werkzeug.security.generate_password_hash("password123")
-
 INSERT INTO employee (name, surname, phone_number, email, address, salary, username, password_hash, is_active) VALUES
 -- Managers
-('John', 'Manager', '555-0001', 'john.manager@rms.com', '123 Main St, New York, NY 10001', 65000.00, 'jmanager', 'scrypt:32768:8:1$VQm5ZN8TGxKhY2Zv$8f5e0c3d9b2a1e7f6c4d8a5b3e2f1c9d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1', TRUE),
-('Sarah', 'Anderson', '555-0002', 'sarah.anderson@rms.com', '456 Oak Ave, New York, NY 10002', 62000.00, 'sanderson', 'scrypt:32768:8:1$VQm5ZN8TGxKhY2Zv$8f5e0c3d9b2a1e7f6c4d8a5b3e2f1c9d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1', TRUE),
+('John', 'Manager', '555-0001', 'john.manager@rms.com', '123 Main St, New York, NY 10001', 65000.00, 'jmanager', 'scrypt:32768:8:1$H6KIWGTKquIiaOwf$efdef9b44c81324355c00dcf0f2bfe1b496b3abb814e4c480eca05abab4ddf3a9d371f5deb0f681b291e4b8b85a75f342920ea75be23f4ff6078783b710a468f', TRUE),
+('Sarah', 'Anderson', '555-0002', 'sarah.anderson@rms.com', '456 Oak Ave, New York, NY 10002', 62000.00, 'sanderson', 'scrypt:32768:8:1$H6KIWGTKquIiaOwf$efdef9b44c81324355c00dcf0f2bfe1b496b3abb814e4c480eca05abab4ddf3a9d371f5deb0f681b291e4b8b85a75f342920ea75be23f4ff6078783b710a468f', TRUE),
 
 -- Staff (Servers)
-('Emily', 'Williams', '555-0100', 'emily.w@rms.com', '789 Pine Rd, Brooklyn, NY 11201', 35000.00, 'ewilliams', 'scrypt:32768:8:1$VQm5ZN8TGxKhY2Zv$8f5e0c3d9b2a1e7f6c4d8a5b3e2f1c9d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1', TRUE),
-('Michael', 'Chen', '555-0101', 'michael.c@rms.com', '321 Elm St, Brooklyn, NY 11202', 33000.00, 'mchen', 'scrypt:32768:8:1$VQm5ZN8TGxKhY2Zv$8f5e0c3d9b2a1e7f6c4d8a5b3e2f1c9d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1', TRUE),
-('David', 'Martinez', '555-0102', 'david.m@rms.com', '654 Maple Dr, Queens, NY 11354', 34000.00, 'dmartinez', 'scrypt:32768:8:1$VQm5ZN8TGxKhY2Zv$8f5e0c3d9b2a1e7f6c4d8a5b3e2f1c9d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1', TRUE),
-('Lisa', 'Anderson', '555-0103', 'lisa.a@rms.com', '987 Cedar Ln, Queens, NY 11355', 33500.00, 'landerson', 'scrypt:32768:8:1$VQm5ZN8TGxKhY2Zv$8f5e0c3d9b2a1e7f6c4d8a5b3e2f1c9d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1', TRUE),
+('Emily', 'Williams', '555-0100', 'emily.w@rms.com', '789 Pine Rd, Brooklyn, NY 11201', 35000.00, 'ewilliams', 'scrypt:32768:8:1$H6KIWGTKquIiaOwf$efdef9b44c81324355c00dcf0f2bfe1b496b3abb814e4c480eca05abab4ddf3a9d371f5deb0f681b291e4b8b85a75f342920ea75be23f4ff6078783b710a468f', TRUE),
+('Michael', 'Chen', '555-0101', 'michael.c@rms.com', '321 Elm St, Brooklyn, NY 11202', 33000.00, 'scrypt:32768:8:1$H6KIWGTKquIiaOwf$efdef9b44c81324355c00dcf0f2bfe1b496b3abb814e4c480eca05abab4ddf3a9d371f5deb0f681b291e4b8b85a75f342920ea75be23f4ff6078783b710a468f', TRUE),
+('David', 'Martinez', '555-0102', 'david.m@rms.com', '654 Maple Dr, Queens, NY 11354', 34000.00, 'dmartinez', 'scrypt:32768:8:1$H6KIWGTKquIiaOwf$efdef9b44c81324355c00dcf0f2bfe1b496b3abb814e4c480eca05abab4ddf3a9d371f5deb0f681b291e4b8b85a75f342920ea75be23f4ff6078783b710a468f', TRUE),
+('Lisa', 'Anderson', '555-0103', 'lisa.a@rms.com', '987 Cedar Ln, Queens, NY 11355', 33500.00, 'landerson', 'scrypt:32768:8:1$H6KIWGTKquIiaOwf$efdef9b44c81324355c00dcf0f2bfe1b496b3abb814e4c480eca05abab4ddf3a9d371f5deb0f681b291e4b8b85a75f342920ea75be23f4ff6078783b710a468f', TRUE),
 
 -- Staff (Kitchen)
-('Robert', 'Thompson', '555-0104', 'robert.t@rms.com', '147 Birch St, Bronx, NY 10451', 38000.00, 'rthompson', 'scrypt:32768:8:1$VQm5ZN8TGxKhY2Zv$8f5e0c3d9b2a1e7f6c4d8a5b3e2f1c9d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1', TRUE),
-('Amanda', 'Garcia', '555-0105', 'amanda.g@rms.com', '258 Willow Way, Bronx, NY 10452', 36000.00, 'agarcia', 'scrypt:32768:8:1$VQm5ZN8TGxKhY2Zv$8f5e0c3d9b2a1e7f6c4d8a5b3e2f1c9d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1', TRUE),
+('Robert', 'Thompson', '555-0104', 'robert.t@rms.com', '147 Birch St, Bronx, NY 10451', 38000.00, 'rthompson', 'scrypt:32768:8:1$H6KIWGTKquIiaOwf$efdef9b44c81324355c00dcf0f2bfe1b496b3abb814e4c480eca05abab4ddf3a9d371f5deb0f681b291e4b8b85a75f342920ea75be23f4ff6078783b710a468f', TRUE),
+('Amanda', 'Garcia', '555-0105', 'amanda.g@rms.com', '258 Willow Way, Bronx, NY 10452', 36000.00, 'agarcia', 'scrypt:32768:8:1$H6KIWGTKquIiaOwf$efdef9b44c81324355c00dcf0f2bfe1b496b3abb814e4c480eca05abab4ddf3a9d371f5deb0f681b291e4b8b85a75f342920ea75be23f4ff6078783b710a468f', TRUE),
 
 -- Staff (Bartender)
-('Kevin', 'Brown', '555-0106', 'kevin.b@rms.com', '369 Ash Ct, Manhattan, NY 10003', 34500.00, 'kbrown', 'scrypt:32768:8:1$VQm5ZN8TGxKhY2Zv$8f5e0c3d9b2a1e7f6c4d8a5b3e2f1c9d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1', TRUE);
+('Kevin', 'Brown', '555-0106', 'kevin.b@rms.com', '369 Ash Ct, Manhattan, NY 10003', 34500.00, 'kbrown', 'scrypt:32768:8:1$H6KIWGTKquIiaOwf$efdef9b44c81324355c00dcf0f2bfe1b496b3abb814e4c480eca05abab4ddf3a9d371f5deb0f681b291e4b8b85a75f342920ea75be23f4ff6078783b710a468f', TRUE);
 
 -- Assign Manager roles
 INSERT INTO manager (employee_id) VALUES (1), (2);
@@ -342,12 +334,7 @@ INSERT INTO expense (manager_id, expense_type, expense_date, amount, description
 (1, 'Utilities', '2025-12-10', 850.00, 'Electricity and water bills'),
 (2, 'Maintenance', '2025-12-12', 600.00, 'HVAC system repair');
 
--- Réactiver les contraintes FK
 SET FOREIGN_KEY_CHECKS = 1;
-
--- ==========================================
--- VÉRIFICATIONS
--- ==========================================
 
 SELECT 'Database seeded successfully!' AS Status;
 SELECT CONCAT(COUNT(*), ' employees') AS Employees FROM employee;
@@ -357,10 +344,6 @@ SELECT CONCAT(COUNT(*), ' tables') AS Tables FROM restaurant_table;
 SELECT CONCAT(COUNT(*), ' active orders') AS Active_Orders FROM customer_order WHERE payment_status = 'UNPAID';
 SELECT CONCAT(COUNT(*), ' schedules') AS Schedules FROM schedule;
 SELECT CONCAT(COUNT(*), ' staff requests') AS Staff_Requests FROM staff_request;
-
--- ==========================================
--- CREDENTIALS POUR SE CONNECTER
--- ==========================================
 
 SELECT '===========================================' AS '';
 SELECT 'LOGIN CREDENTIALS (password: password123)' AS '';

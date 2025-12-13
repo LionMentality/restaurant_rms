@@ -1,7 +1,4 @@
--- =========================
--- Restaurant Management System (CS353) - Final SQL
--- DBMS: MySQL 8+
--- =========================
+
 
 DROP DATABASE IF EXISTS rms;
 CREATE DATABASE rms CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -41,8 +38,6 @@ CREATE TABLE staff (
     ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
--- (Optionnel) relation redondante avec staff.manager_id
--- Je la laisse, mais côté code on utilisera staff.manager_id comme source de vérité.
 CREATE TABLE manages (
   manager_id INT NOT NULL,
   staff_id INT NOT NULL,
@@ -191,7 +186,7 @@ CREATE TABLE inventory_alert (
 CREATE TABLE menu_item (
   menu_item_id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
-  category VARCHAR(50) DEFAULT 'Main Course',  -- ⬅️ AJOUTE CETTE LIGNE
+  category VARCHAR(50) DEFAULT 'Main Course',
   menu_price DECIMAL(10,2) NOT NULL,
   is_available BOOLEAN NOT NULL DEFAULT TRUE,
   description TEXT

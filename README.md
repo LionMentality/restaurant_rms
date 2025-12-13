@@ -1,6 +1,6 @@
 # 🍴 Restaurant Management System
 
-CS 353 - Database Systems Project  
+CS 353 - Database Systems 
 Team 15 - Bilkent University Fall 2025
 
 ---
@@ -11,13 +11,7 @@ Team 15 - Bilkent University Fall 2025
 - Python 3.8+
 - MySQL 8.0+
 
-### 1. Clone the repo
-```bash
-git clone <your-repo>
-cd restaurant-management-system
-```
-
-### 2. Setup Python
+### 1. Setup Python
 ```bash
 python -m venv venv
 
@@ -30,10 +24,10 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 3. Setup MySQL
+### 2. Setup MySQL
 Create MySQL user:
 ```sql
-mysql -u root -p
+sudo mysql
 
 CREATE USER 'rms_user'@'localhost' IDENTIFIED BY 'rms_password';
 GRANT ALL PRIVILEGES ON rms.* TO 'rms_user'@'localhost';
@@ -41,19 +35,18 @@ FLUSH PRIVILEGES;
 EXIT;
 ```
 
-### 4. Create `.env` file
+### 3. Create `.env` file
 ```env
 DB_HOST=127.0.0.1
 DB_USER=rms_user
 DB_PASSWORD=rms_password
 DB_NAME=rms
-SECRET_KEY=your-secret-key-here
 ```
 
-### 5. Initialize database
+### 4. Initialize database
 ```bash
-mysql -u rms_user -prms_password < schema.sql
-mysql -u rms_user -prms_password rms < seed_data.sql
+sudo mysql < schema.sql
+sudo mysql < insert.sql
 ```
 
 ### 6. Run the app
@@ -81,18 +74,6 @@ Open http://127.0.0.1:5000
 **"Access denied"** → Check `.env` credentials  
 **"Table doesn't exist"** → Re-run `schema.sql`  
 **"Invalid credentials"** → Password is `password123`
-
----
-
-## 📂 Project Structure
-```
-├── app.py              # Flask application
-├── db.py               # MySQL connection
-├── schema.sql          # Database schema
-├── seed_data.sql       # Demo data
-├── templates/          # HTML pages
-└── static/             # CSS/JS files
-```
 
 ---
 

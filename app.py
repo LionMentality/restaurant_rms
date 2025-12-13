@@ -38,7 +38,6 @@ def login():
     session["full_name"] = f"{user['name']} {user['surname']}"
     session["username"] = user["username"]
 
-    # role
     conn = get_conn()
     cur = conn.cursor()
     cur.execute("SELECT 1 FROM manager WHERE employee_id=%s", (user["employee_id"],))
@@ -58,7 +57,6 @@ def register():
     if request.method == "GET":
         return render_template("register.html", error=None)
 
-    # Get form data
     name = request.form.get("name", "").strip()
     surname = request.form.get("surname", "").strip()
     email = request.form.get("email", "").strip()
@@ -252,7 +250,7 @@ def menu_page():
     )
 
 def monday_of_current_week(d: date) -> date:
-    return d - timedelta(days=d.weekday())  # Monday=0
+    return d - timedelta(days=d.weekday())
 
 @app.get("/schedule")
 def schedule_page():
@@ -269,7 +267,6 @@ def schedule_page():
     conn = get_conn()
     cur = conn.cursor(dictionary=True)
 
-    # Get week shifts
     cur.execute("""
         SELECT 
             s.schedule_id, 
@@ -285,7 +282,6 @@ def schedule_page():
     """, (staff_id, week_start, week_end))
     shifts = cur.fetchall()
 
-    # Get my requests
     cur.execute("""
         SELECT 
             request_id, 
@@ -311,7 +307,6 @@ def schedule_page():
     """, (staff_id,))
     requests_rows = cur.fetchall()
 
-    # Count pending requests for managers
     pending_count = 0
     if is_manager:
         cur.execute("""
@@ -325,14 +320,11 @@ def schedule_page():
 
     conn.close()
 
-    # Build week days
     week_days = [week_start + timedelta(days=i) for i in range(7)]
-    
-    # Build shifts by day with exchange info
+
     shifts_by_day = {d.isoformat(): [] for d in week_days}
     for s in shifts:
         day_key = str(s["shift_date"])
-        # Add exchange info (placeholder - would need actual exchange tracking)
         s["is_exchanged"] = False
         s["exchange_partner"] = None
         shifts_by_day[day_key].append(s)
@@ -363,7 +355,6 @@ def request_timeoff():
     conn = get_conn()
     cur = conn.cursor()
 
-    # manager_id depuis la table staff (source de vérité)
     cur.execute("SELECT manager_id FROM staff WHERE employee_id=%s", (staff_id,))
     row = cur.fetchone()
     manager_id = row[0] if row else None
@@ -389,7 +380,7 @@ def request_overtime():
     shift_date = request.form.get("shift_date")
     start_time = request.form.get("start_time")
     end_time   = request.form.get("end_time")
-    extra_time = request.form.get("extra_time", type=int)  # minutes
+    extra_time = request.form.get("extra_time", type=int)
     reason     = (request.form.get("reason") or "").strip()
 
     conn = get_conn()
@@ -416,7 +407,7 @@ def request_availability():
         return redirect(url_for("login"))
 
     staff_id = session["user_id"]
-    day = request.form.get("day")          # YYYY-MM-DD
+    day = request.form.get("day")
     start_time = request.form.get("start_time")
     end_time   = request.form.get("end_time")
     reason     = (request.form.get("reason") or "").strip()
@@ -449,7 +440,6 @@ def inventory_page():
     conn = get_conn()
     cur = conn.cursor(dictionary=True)
 
-    # KPIs
     cur.execute("SELECT COUNT(*) AS total_items FROM inventory_item")
     total_items = cur.fetchone()["total_items"]
 
@@ -469,7 +459,6 @@ def inventory_page():
     """)
     expiring_soon = cur.fetchone()["expiring_soon"]
 
-    # List + search
     cur.execute("""
         SELECT
           ii.inventory_item_id,
@@ -491,7 +480,6 @@ def inventory_page():
 
     conn.close()
 
-    # compute labels for UI badges (maquette)
     for it in items:
         it["is_low_stock"] = it["current_quantity"] < it["minimum_stock_threshold"]
         it["is_expired"] = (it["days_left"] is not None and it["days_left"] < 0)
@@ -516,7 +504,6 @@ def waste_page():
     conn = get_conn()
     cur = conn.cursor(dictionary=True)
 
-    # 1) Detailed waste table (PDF)
     cur.execute("""
         SELECT
           w.ingredient_id,
@@ -534,7 +521,6 @@ def waste_page():
     """)
     rows = cur.fetchall()
 
-    # 2) Summary bar (PDF)
     cur.execute("SELECT COUNT(DISTINCT ingredient_id) AS distinct_ingredients_wasted FROM waste_tracking")
     total_waste_items = cur.fetchone()["distinct_ingredients_wasted"]
 
@@ -575,15 +561,12 @@ def tables_page():
     conn = get_conn()
     cur = conn.cursor(dictionary=True)
 
-    # KPIs - Total tables
     cur.execute("SELECT COUNT(*) AS total FROM restaurant_table")
     total_tables = cur.fetchone()["total"]
 
-    # Occupied tables
     cur.execute("SELECT COUNT(*) AS c FROM restaurant_table WHERE status='OCCUPIED'")
     occupied_tables = cur.fetchone()["c"]
 
-    # Active orders (UNPAID)
     cur.execute("""
         SELECT COUNT(*) AS active_orders
         FROM customer_order
@@ -591,7 +574,6 @@ def tables_page():
     """)
     active_orders = cur.fetchone()["active_orders"]
 
-    # Current revenue (from UNPAID orders - work in progress)
     cur.execute("""
         SELECT COALESCE(SUM(total_amount), 0) AS current_revenue
         FROM customer_order
@@ -599,7 +581,6 @@ def tables_page():
     """)
     current_revenue = cur.fetchone()["current_revenue"]
 
-    # Tables list with computed metrics
     cur.execute("""
         SELECT
             t.table_id,
@@ -617,7 +598,6 @@ def tables_page():
     tables = cur.fetchall()
     conn.close()
 
-    # Compute occupancy: if there's an active order, assume table is at capacity
     for t in tables:
         if int(t["parties"]) > 0 and t["status"] == "OCCUPIED":
             t["occupancy"] = t["capacity"]
@@ -673,7 +653,6 @@ def table_details(table_id):
     conn = get_conn()
     cur = conn.cursor(dictionary=True)
 
-    # Table info
     cur.execute("""
         SELECT table_id, table_number, capacity, status
         FROM restaurant_table
@@ -685,7 +664,6 @@ def table_details(table_id):
         conn.close()
         return jsonify({"error": "Table not found"}), 404
 
-    # Active order (UNPAID) for this table
     cur.execute("""
         SELECT 
             o.order_id, 
@@ -707,7 +685,6 @@ def table_details(table_id):
     subtotal = 0.0
 
     if order:
-        # Get order items
         cur.execute("""
             SELECT
               oi.quantity,
@@ -725,7 +702,6 @@ def table_details(table_id):
     tax = round(subtotal * 0.08, 2)
     total = round(subtotal + tax, 2)
 
-    # Format items for frontend
     items_api = [
         {
             "qty": it["quantity"], 
@@ -735,7 +711,6 @@ def table_details(table_id):
         for it in items
     ]
 
-    # Format time (HH:MM)
     seated_at = "—"
     if order and order.get("order_datetime"):
         seated_at = str(order["order_datetime"])[11:16]
@@ -770,7 +745,6 @@ def staff_management_page():
     conn = get_conn()
     cur = conn.cursor(dictionary=True)
 
-    # staff list
     cur.execute("""
         SELECT
           s.employee_id AS staff_id,
@@ -788,7 +762,6 @@ def staff_management_page():
     """, (manager_id,))
     staff_rows = cur.fetchall()
 
-    # requests list
     cur.execute("""
         SELECT
           r.request_id,
