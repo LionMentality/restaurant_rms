@@ -27,19 +27,26 @@
       </div>
       
       <div style="display:flex;gap:10px;">
-        <button 
-          class="btn gray" 
-          onclick="document.getElementById('modalShiftExchange').showModal()"
+        <button
+          class="btn gray"
+          onclick="document.getElementById('modalTimeOff').showModal()"
           style="display:flex;align-items:center;gap:8px;"
         >
-          <span>🔄</span> Request Shift Exchange
+          <span>🏖️</span> Request Time Off
         </button>
-        <button 
-          class="btn dark"
-          onclick="document.getElementById('modalCalendar').showModal()"
+        <button
+          class="btn gray"
+          onclick="document.getElementById('modalOvertime').showModal()"
           style="display:flex;align-items:center;gap:8px;"
         >
-          <span>📅</span>
+          <span>⏰</span> Request Overtime
+        </button>
+        <button
+          class="btn gray"
+          onclick="document.getElementById('modalAvailability').showModal()"
+          style="display:flex;align-items:center;gap:8px;"
+        >
+          <span>📋</span> Set Availability
         </button>
       </div>
     </div>
@@ -158,16 +165,16 @@
   </div>
 </div>
 
-<!-- Shift Exchange Modal -->
-<dialog id="modalShiftExchange" style="border:none;border-radius:18px;max-width:500px;width:92vw;padding:0;">
+<!-- Time Off Modal -->
+<dialog id="modalTimeOff" style="border:none;border-radius:18px;max-width:500px;width:92vw;padding:0;">
   <div style="padding:24px;">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
       <div>
-        <div style="font-weight:900;font-size:20px;">Request Shift Exchange</div>
-        <div class="page-sub" style="margin:4px 0 0;">Request to exchange your shift with another staff member</div>
+        <div style="font-weight:900;font-size:20px;">Request Time Off</div>
+        <div class="page-sub" style="margin:4px 0 0;">Request time away from work</div>
       </div>
-      <button 
-        onclick="document.getElementById('modalShiftExchange').close()"
+      <button
+        onclick="document.getElementById('modalTimeOff').close()"
         style="width:40px;height:40px;border-radius:10px;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-size:18px;"
       >
         ✕
@@ -175,8 +182,6 @@
     </div>
 
     <form method="post" action="{{ url_for('request_timeoff') }}" style="display:flex;flex-direction:column;gap:14px;">
-      <input type="hidden" name="request_type" value="TIME_OFF">
-      
       <div>
         <div style="font-weight:700;margin:0 0 8px;">Start Date</div>
         <input type="date" name="start_date" required style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
@@ -193,7 +198,7 @@
       </div>
 
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
-        <button type="button" class="btn gray" onclick="document.getElementById('modalShiftExchange').close()">
+        <button type="button" class="btn gray" onclick="document.getElementById('modalTimeOff').close()">
           Cancel
         </button>
         <button type="submit" class="btn dark">Submit Request</button>
@@ -202,15 +207,104 @@
   </div>
 </dialog>
 
-<!-- Calendar Modal (placeholder) -->
-<dialog id="modalCalendar" style="border:none;border-radius:18px;max-width:400px;width:92vw;padding:24px;">
-  <div style="text-align:center;">
-    <div style="font-size:48px;margin-bottom:16px;">📅</div>
-    <div style="font-weight:900;font-size:20px;margin-bottom:8px;">Calendar View</div>
-    <div class="page-sub">Coming soon...</div>
-    <button class="btn dark" onclick="document.getElementById('modalCalendar').close()" style="margin-top:20px;">
-      Close
-    </button>
+<!-- Overtime Modal -->
+<dialog id="modalOvertime" style="border:none;border-radius:18px;max-width:500px;width:92vw;padding:0;">
+  <div style="padding:24px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+      <div>
+        <div style="font-weight:900;font-size:20px;">Request Overtime</div>
+        <div class="page-sub" style="margin:4px 0 0;">Request additional hours for a shift</div>
+      </div>
+      <button
+        onclick="document.getElementById('modalOvertime').close()"
+        style="width:40px;height:40px;border-radius:10px;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-size:18px;"
+      >
+        ✕
+      </button>
+    </div>
+
+    <form method="post" action="{{ url_for('request_overtime') }}" style="display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <div style="font-weight:700;margin:0 0 8px;">Shift Date</div>
+        <input type="date" name="shift_date" required style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <div style="font-weight:700;margin:0 0 8px;">Start Time</div>
+          <input type="time" name="start_time" required style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+        </div>
+        <div>
+          <div style="font-weight:700;margin:0 0 8px;">End Time</div>
+          <input type="time" name="end_time" required style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+        </div>
+      </div>
+
+      <div>
+        <div style="font-weight:700;margin:0 0 8px;">Extra Time (minutes)</div>
+        <input type="number" name="extra_time" min="0" required style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+      </div>
+
+      <div>
+        <div style="font-weight:700;margin:0 0 8px;">Reason (Optional)</div>
+        <textarea name="reason" rows="3" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;font-family:inherit;"></textarea>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+        <button type="button" class="btn gray" onclick="document.getElementById('modalOvertime').close()">
+          Cancel
+        </button>
+        <button type="submit" class="btn dark">Submit Request</button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<!-- Availability Modal -->
+<dialog id="modalAvailability" style="border:none;border-radius:18px;max-width:500px;width:92vw;padding:0;">
+  <div style="padding:24px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+      <div>
+        <div style="font-weight:900;font-size:20px;">Set Availability</div>
+        <div class="page-sub" style="margin:4px 0 0;">Specify when you're available to work</div>
+      </div>
+      <button
+        onclick="document.getElementById('modalAvailability').close()"
+        style="width:40px;height:40px;border-radius:10px;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-size:18px;"
+      >
+        ✕
+      </button>
+    </div>
+
+    <form method="post" action="{{ url_for('request_availability') }}" style="display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <div style="font-weight:700;margin:0 0 8px;">Date</div>
+        <input type="date" name="day" required style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <div style="font-weight:700;margin:0 0 8px;">Available From</div>
+          <input type="time" name="start_time" required style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+        </div>
+        <div>
+          <div style="font-weight:700;margin:0 0 8px;">Available Until</div>
+          <input type="time" name="end_time" required style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+        </div>
+      </div>
+
+      <div>
+        <div style="font-weight:700;margin:0 0 8px;">Notes (Optional)</div>
+        <textarea name="reason" rows="3" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;font-family:inherit;"></textarea>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+        <button type="button" class="btn gray" onclick="document.getElementById('modalAvailability').close()">
+          Cancel
+        </button>
+        <button type="submit" class="btn dark">Submit Request</button>
+      </div>
+    </form>
   </div>
 </dialog>
 

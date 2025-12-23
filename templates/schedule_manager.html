@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1 class="page-title">Schedule Management</h1>
+  <p class="page-sub">Create and manage staff schedules</p>
+
+  <button class="btn dark" onclick="openModal('createScheduleModal')" style="margin-bottom:20px;">➕ Create New Schedule</button>
+
+  <h2 style="margin:26px 0 12px;">Upcoming Schedules</h2>
+  {% for sch in schedules %}
+  <div class="row" style="margin-top:12px;">
+    <div class="row-left">
+      <div>
+        <div class="row-title">{{ sch.name }} {{ sch.surname }}</div>
+        <div class="row-sub">{{ sch.shift_date }} • {{ sch.start_time }} - {{ sch.end_time }}</div>
+        {% if sch.assigned_role %}<span class="badge gray">{{ sch.assigned_role }}</span>{% endif %}
+      </div>
+    </div>
+    <div class="row-right">
+      <button class="btn gray" onclick="deleteSchedule({{ sch.schedule_id }})">Delete</button>
+    </div>
+  </div>
+  {% endfor %}
+
+  {% if schedules|length == 0 %}
+  <div class="card pad">
+    <b>No upcoming schedules found.</b>
+  </div>
+  {% endif %}
+
+  <h2 style="margin:26px 0 12px;">Staff Availability</h2>
+  {% for avail in availability %}
+  <div class="row" style="margin-top:12px;">
+    <div class="row-left">
+      <div>
+        <div class="row-title">{{ avail.name }} {{ avail.surname }}</div>
+        <div class="row-sub">{{ avail.start_date }} • {{ avail.start_time }} - {{ avail.end_time }}</div>
+      </div>
+    </div>
+    <div class="row-right">
+      <span class="badge {% if avail.request_type == 'AVAILABILITY' %}green{% else %}orange{% endif %}">{{ avail.request_type }}</span>
+    </div>
+  </div>
+  {% endfor %}
+
+  <!-- Create Schedule Modal -->
+  <div class="modal-backdrop" id="createScheduleModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">Create Schedule</div>
+          <div class="modal-sub">Assign shift to staff member</div>
+        </div>
+        <button class="close" onclick="closeModal('createScheduleModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form method="post" action="{{ url_for('create_schedule') }}">
+          <div style="margin-bottom:12px;">
+            <label>Staff Member</label>
+            <select name="staff_id" class="select" style="width:100%;" required>
+              <option value="">Select staff...</option>
+              {% for staff in staff_list %}
+              <option value="{{ staff.employee_id }}">{{ staff.name }} {{ staff.surname }}{% if staff.role %} ({{ staff.role }}){% endif %}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div style="margin-bottom:12px;">
+            <label>Shift Date</label>
+            <input type="date" name="shift_date" required style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+          </div>
+
+          <div class="grid cols-2" style="margin-bottom:12px;">
+            <div>
+              <label>Start Time</label>
+              <input type="time" name="start_time" required style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+            </div>
+            <div>
+              <label>End Time</label>
+              <input type="time" name="end_time" required style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+            </div>
+          </div>
+
+          <div style="margin-bottom:12px;">
+            <label>Role (Optional)</label>
+            <input type="text" name="assigned_role" placeholder="e.g., Morning Server" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+          </div>
+
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+            <button type="button" class="btn gray" onclick="closeModal('createScheduleModal')">Cancel</button>
+            <button type="submit" class="btn dark">Create Schedule</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function deleteSchedule(scheduleId) {
+      if (confirm('Delete this schedule?')) {
+        fetch('/schedule/delete/' + scheduleId, { method: 'POST' })
+          .then(r => r.json())
+          .then(() => location.reload());
+      }
+    }
+  </script>
+{% endblock %}

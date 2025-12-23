@@ -23,6 +23,14 @@
     </div>
   </div>
 
+  {% if session.get("role") == "manager" %}
+  <div style="display:flex;gap:12px;margin:18px 0;">
+    <button class="btn dark" onclick="openModal('receiveShipmentModal')">📦 Receive Shipment</button>
+    <button class="btn dark" onclick="openModal('adjustStockModal')">⚖️ Adjust Stock</button>
+    <a href="{{ url_for('inventory_weekly_report') }}" class="btn dark">📊 Weekly Report</a>
+  </div>
+  {% endif %}
+
   <form class="search-row" method="get" action="{{ url_for('inventory_page') }}">
     <div class="input" style="flex:1;">
       <span class="icon">🔍</span>
@@ -55,7 +63,11 @@
             </div>
 
             <div>
-              <div>Min. Quantity</div>
+              <div>Min. Quantity
+                {% if session.get("role") == "manager" %}
+                <button class="btn gray" style="padding:4px 8px;font-size:11px;margin-left:6px;" onclick="editThreshold({{ it.ingredient_id }}, {{ it.minimum_stock_threshold }}, '{{ it.ingredient_name }}')">Edit</button>
+                {% endif %}
+              </div>
               <div style="color:var(--text);font-weight:800;margin-top:6px;">
                 {{ it.minimum_stock_threshold }} {{ it.unit }}
               </div>
@@ -85,4 +97,128 @@
       </div>
     </div>
   {% endfor %}
+
+  <!-- Receive Shipment Modal -->
+  <div class="modal-backdrop" id="receiveShipmentModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">Receive Shipment</div>
+          <div class="modal-sub">Log received ingredients and update inventory</div>
+        </div>
+        <button class="close" onclick="closeModal('receiveShipmentModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form method="post" action="{{ url_for('receive_shipment') }}">
+          <div style="margin-bottom:12px;">
+            <label>Ingredient</label>
+            <select name="ingredient_id" class="select" style="width:100%;" required>
+              <option value="">Select ingredient...</option>
+              {% for it in items %}
+              <option value="{{ it.ingredient_id }}">{{ it.ingredient_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div style="margin-bottom:12px;">
+            <label>Quantity Received</label>
+            <input type="number" name="quantity" step="0.01" min="0.01" required style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+          </div>
+
+          <div style="margin-bottom:12px;">
+            <label>Unit Cost</label>
+            <input type="number" name="unit_cost" step="0.01" min="0.01" required style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+          </div>
+
+          <div style="margin-bottom:12px;">
+            <label>Expiration Date (Optional)</label>
+            <input type="date" name="expiration_date" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+          </div>
+
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+            <button type="button" class="btn gray" onclick="closeModal('receiveShipmentModal')">Cancel</button>
+            <button type="submit" class="btn dark">Receive Shipment</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Adjust Stock Modal -->
+  <div class="modal-backdrop" id="adjustStockModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">Adjust Stock</div>
+          <div class="modal-sub">Manual inventory adjustment</div>
+        </div>
+        <button class="close" onclick="closeModal('adjustStockModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form method="post" action="{{ url_for('adjust_inventory') }}">
+          <div style="margin-bottom:12px;">
+            <label>Ingredient</label>
+            <select name="ingredient_id" class="select" style="width:100%;" required>
+              <option value="">Select ingredient...</option>
+              {% for it in items %}
+              <option value="{{ it.ingredient_id }}">{{ it.ingredient_name }} (Current: {{ it.current_quantity }})</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div style="margin-bottom:12px;">
+            <label>Adjustment Amount (+ to add, - to subtract)</label>
+            <input type="number" name="adjustment" step="0.01" required style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;" placeholder="e.g., +5.5 or -2.3">
+          </div>
+
+          <div style="margin-bottom:12px;">
+            <label>Reason</label>
+            <textarea name="reason" rows="3" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;" placeholder="Reason for adjustment..."></textarea>
+          </div>
+
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+            <button type="button" class="btn gray" onclick="closeModal('adjustStockModal')">Cancel</button>
+            <button type="submit" class="btn dark">Adjust Stock</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Threshold Modal -->
+  <div class="modal-backdrop" id="editThresholdModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">Edit Minimum Threshold</div>
+          <div class="modal-sub" id="thresholdIngredientName"></div>
+        </div>
+        <button class="close" onclick="closeModal('editThresholdModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form method="post" action="{{ url_for('update_threshold') }}">
+          <input type="hidden" name="ingredient_id" id="thresholdIngredientId">
+
+          <div style="margin-bottom:12px;">
+            <label>Minimum Stock Threshold</label>
+            <input type="number" name="threshold" id="thresholdValue" step="0.01" min="0" required style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+          </div>
+
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+            <button type="button" class="btn gray" onclick="closeModal('editThresholdModal')">Cancel</button>
+            <button type="submit" class="btn dark">Update Threshold</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function editThreshold(ingredientId, currentThreshold, ingredientName) {
+      document.getElementById('thresholdIngredientId').value = ingredientId;
+      document.getElementById('thresholdValue').value = currentThreshold;
+      document.getElementById('thresholdIngredientName').textContent = ingredientName;
+      openModal('editThresholdModal');
+    }
+  </script>
 {% endblock %}

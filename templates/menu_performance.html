@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1 class="page-title">Menu Performance Report</h1>
+  <p class="page-sub">Profitability analysis for all menu items</p>
+
+  {% for item in items %}
+  <div class="row" style="margin-top:12px;">
+    <div class="row-left">
+      <div>
+        <div class="row-title">{{ item.name }}</div>
+        <div class="row-sub">{{ item.category }} • Price: ${{ "%.2f"|format(item.menu_price) }} • Cost: ${{ "%.2f"|format(item.ingredient_cost) }}</div>
+      </div>
+    </div>
+    <div class="row-right">
+      <div style="font-weight:800;color:{% if item.profit_margin > 0 %}var(--green){% else %}var(--red){% endif %};">Profit: ${{ "%.2f"|format(item.profit_margin) }}</div>
+      <span class="badge {% if item.profit_percentage > 60 %}green{% elif item.profit_percentage > 40 %}orange{% else %}red{% endif %}">{{ "%.1f"|format(item.profit_percentage) }}%</span>
+    </div>
+  </div>
+  {% endfor %}
+
+  <div style="margin-top:24px;">
+    <a href="{{ url_for('reports_dashboard') }}" class="btn gray">Back to Reports</a>
+  </div>
+{% endblock %}

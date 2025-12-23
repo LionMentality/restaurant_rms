@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1 class="page-title">Weekly Waste Report</h1>
+  <p class="page-sub">Waste analysis and cost breakdown</p>
+
+  <form method="get" style="margin-bottom:20px;">
+    <div style="display:flex;gap:12px;align-items:flex-end;">
+      <div>
+        <label style="font-weight:700;margin-bottom:6px;display:block;">Start Date</label>
+        <input type="date" name="start_date" value="{{ start_date }}" style="padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+      </div>
+      <div>
+        <label style="font-weight:700;margin-bottom:6px;display:block;">End Date</label>
+        <input type="date" name="end_date" value="{{ end_date }}" style="padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+      </div>
+      <button type="submit" class="btn dark">Generate Report</button>
+      <a href="{{ url_for('waste_page') }}" class="btn gray">Back to Waste Management</a>
+    </div>
+  </form>
+
+  <h2 style="margin:26px 0 12px;">Waste Details</h2>
+  {% for item in waste_data %}
+  <div class="row" style="margin-top:12px;">
+    <div class="row-left">
+      <div>
+        <div class="row-title">{{ item.name }}</div>
+        <div class="row-sub">Reason: {{ item.reason }} • {{ item.incidents }} incidents • Week {{ item.week_num }}</div>
+      </div>
+    </div>
+    <div class="row-right">
+      <div style="font-weight:800;color:var(--red);">${{ "%.2f"|format(item.total_cost) }}</div>
+      <div style="font-size:13px;color:var(--muted);">{{ item.total_wasted }} {{ item.unit }}</div>
+    </div>
+  </div>
+  {% endfor %}
+
+  {% if waste_data|length == 0 %}
+  <div class="card pad">
+    <b>No waste data found for this period.</b>
+  </div>
+  {% endif %}
+{% endblock %}

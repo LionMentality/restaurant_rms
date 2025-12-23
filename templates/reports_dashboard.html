@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1 class="page-title">Reports Dashboard</h1>
+  <p class="page-sub">Key metrics and performance indicators</p>
+
+  <h2 style="margin:26px 0 12px;">Low Stock Alerts</h2>
+  {% for item in low_stock %}
+  <div class="row" style="margin-top:12px;">
+    <div class="row-left">
+      <div>
+        <div class="row-title">{{ item.name }}</div>
+        <div class="row-sub">Current: {{ item.current_quantity }} {{ item.unit }} • Minimum: {{ item.minimum_stock_threshold }} {{ item.unit }}</div>
+      </div>
+    </div>
+    <div class="row-right">
+      <span class="badge red">Short by {{ item.shortage }} {{ item.unit }}</span>
+    </div>
+  </div>
+  {% endfor %}
+
+  {% if low_stock|length == 0 %}
+  <div class="card pad" style="border-color:#d1fae5;background:#f0fdf4;">
+    <span style="color:#166534;font-weight:700;">✓ All inventory items are above minimum thresholds!</span>
+  </div>
+  {% endif %}
+
+  <h2 style="margin:26px 0 12px;">Menu Profitability</h2>
+  {% for item in menu_profit[:5] %}
+  <div class="row" style="margin-top:12px;">
+    <div class="row-left">
+      <div>
+        <div class="row-title">{{ item.name }}</div>
+        <div class="row-sub">{{ item.category }} • Price: ${{ "%.2f"|format(item.menu_price) }}</div>
+      </div>
+    </div>
+    <div class="row-right">
+      <div style="font-weight:800;color:{% if item.profit_margin > 0 %}var(--green){% else %}var(--red){% endif %};">${{ "%.2f"|format(item.profit_margin) }}</div>
+      <div style="font-size:13px;color:var(--muted);">{{ "%.1f"|format(item.profit_percentage) }}% margin</div>
+    </div>
+  </div>
+  {% endfor %}
+
+  <h2 style="margin:26px 0 12px;">Top Staff Performance</h2>
+  {% for staff in staff_perf %}
+  <div class="row" style="margin-top:12px;">
+    <div class="row-left">
+      <div>
+        <div class="row-title">{{ staff.name }} {{ staff.surname }}</div>
+        <div class="row-sub">{{ staff.orders_handled }} orders • {{ staff.days_worked }} days worked</div>
+      </div>
+    </div>
+    <div class="row-right">
+      <div style="font-weight:800;">${{ "%.2f"|format(staff.total_sales) }}</div>
+      <div style="font-size:13px;color:var(--muted);">Avg: ${{ "%.2f"|format(staff.avg_order_value) }}</div>
+    </div>
+  </div>
+  {% endfor %}
+
+  <div style="margin-top:24px;display:flex;gap:12px;">
+    <a href="{{ url_for('menu_performance_report') }}" class="btn dark">Full Menu Report</a>
+    <a href="{{ url_for('staff_performance_report') }}" class="btn dark">Full Staff Report</a>
+  </div>
+{% endblock %}

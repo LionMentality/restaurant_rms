@@ -3,6 +3,12 @@
 <h1 class="page-title">Menu</h1>
 <p class="page-sub">Friday, December 12, 2025</p>
 
+{% if session.get("role") == "manager" %}
+<div style="display:flex;gap:12px;margin:18px 0;">
+  <button class="btn dark" onclick="openModal('createMenuItemModal')">➕ Add New Item</button>
+</div>
+{% endif %}
+
 {% for category, items in menu.items() %}
   <h2 style="margin:26px 0 12px;">{{ category }}</h2>
 
@@ -23,11 +29,153 @@
           {{ item.description }}
         </div>
 
-        <div style="color:var(--accent);font-weight:800;">
-          ${{ "%.2f"|format(item.menu_price) }}
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="color:var(--accent);font-weight:800;">
+            ${{ "%.2f"|format(item.menu_price) }}
+          </div>
+
+          <a href="{{ url_for('menu_cost_analysis', menu_item_id=item.menu_item_id) }}" style="font-size:11px;color:var(--muted);text-decoration:none;">Cost Analysis →</a>
         </div>
+
+        {% if session.get("role") == "manager" %}
+        <div style="margin-top:12px;display:flex;gap:6px;">
+          <button class="btn gray" style="font-size:11px;padding:6px 12px;" onclick="editMenuItem({{ item.menu_item_id }}, '{{ item.name }}', '{{ item.description }}', '{{ item.category }}', {{ item.menu_price }}, {{ item.is_available|lower }})">Edit</button>
+          <form method="post" action="{{ url_for('toggle_menu_availability', menu_item_id=item.menu_item_id) }}" style="display:inline;">
+            <button type="submit" class="btn" style="font-size:11px;padding:6px 12px;{% if item.is_available %}background:var(--red);{% else %}background:var(--green);{% endif %}">
+              {% if item.is_available %}Mark Unavailable{% else %}Mark Available{% endif %}
+            </button>
+          </form>
+        </div>
+        {% endif %}
       </div>
     {% endfor %}
   </div>
 {% endfor %}
+
+<!-- Create Menu Item Modal -->
+<div class="modal-backdrop" id="createMenuItemModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Create Menu Item</div>
+        <div class="modal-sub">Add a new item to the menu</div>
+      </div>
+      <button class="close" onclick="closeModal('createMenuItemModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <form method="post" action="{{ url_for('create_menu_item') }}">
+        <div style="margin-bottom:12px;">
+          <label>Item Name</label>
+          <input type="text" name="name" required style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+        </div>
+
+        <div style="margin-bottom:12px;">
+          <label>Description</label>
+          <textarea name="description" rows="3" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;"></textarea>
+        </div>
+
+        <div class="grid cols-2" style="margin-bottom:12px;">
+          <div>
+            <label>Category</label>
+            <select name="category" class="select" style="width:100%;" required>
+              <option value="">Select category...</option>
+              <option value="Appetizer">Appetizer</option>
+              <option value="Main Course">Main Course</option>
+              <option value="Dessert">Dessert</option>
+              <option value="Beverage">Beverage</option>
+              <option value="Side">Side</option>
+            </select>
+          </div>
+          <div>
+            <label>Price ($)</label>
+            <input type="number" name="menu_price" step="0.01" min="0.01" required style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+          </div>
+        </div>
+
+        <div style="margin-bottom:12px;">
+          <label>Ingredients (select multiple)</label>
+          <div style="max-height:200px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:10px;padding:10px;">
+            {% for ing in ingredients %}
+            <div style="margin-bottom:8px;">
+              <label style="display:flex;align-items:center;gap:8px;">
+                <input type="checkbox" name="ingredients" value="{{ ing.ingredient_id }}">
+                <span>{{ ing.name }} ({{ ing.unit }})</span>
+              </label>
+              <input type="number" name="quantity_{{ ing.ingredient_id }}" step="0.01" min="0" placeholder="Quantity" style="margin-left:24px;width:120px;padding:6px;border:1px solid #e5e7eb;border-radius:6px;">
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+          <button type="button" class="btn gray" onclick="closeModal('createMenuItemModal')">Cancel</button>
+          <button type="submit" class="btn dark">Create Item</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Menu Item Modal -->
+<div class="modal-backdrop" id="editMenuItemModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Edit Menu Item</div>
+        <div class="modal-sub">Update item details</div>
+      </div>
+      <button class="close" onclick="closeModal('editMenuItemModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <form method="post" id="editMenuForm">
+        <input type="hidden" name="menu_item_id" id="editMenuItemId">
+
+        <div style="margin-bottom:12px;">
+          <label>Item Name</label>
+          <input type="text" name="name" id="editName" required style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+        </div>
+
+        <div style="margin-bottom:12px;">
+          <label>Description</label>
+          <textarea name="description" id="editDescription" rows="3" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;"></textarea>
+        </div>
+
+        <div class="grid cols-2" style="margin-bottom:12px;">
+          <div>
+            <label>Category</label>
+            <select name="category" id="editCategory" class="select" style="width:100%;" required>
+              <option value="Appetizer">Appetizer</option>
+              <option value="Main Course">Main Course</option>
+              <option value="Dessert">Dessert</option>
+              <option value="Beverage">Beverage</option>
+              <option value="Side">Side</option>
+            </select>
+          </div>
+          <div>
+            <label>Price ($)</label>
+            <input type="number" name="menu_price" id="editPrice" step="0.01" min="0.01" required style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+          <button type="button" class="btn gray" onclick="closeModal('editMenuItemModal')">Cancel</button>
+          <button type="submit" class="btn dark">Update Item</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function editMenuItem(id, name, description, category, price, isAvailable) {
+  document.getElementById('editMenuItemId').value = id;
+  document.getElementById('editName').value = name;
+  document.getElementById('editDescription').value = description;
+  document.getElementById('editCategory').value = category;
+  document.getElementById('editPrice').value = price;
+  document.getElementById('editMenuForm').action = '/menu/edit/' + id;
+  openModal('editMenuItemModal');
+}
+</script>
+
 {% endblock %}

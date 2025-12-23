@@ -23,6 +23,13 @@
     </div>
   </div>
 
+  {% if session.get("role") == "manager" %}
+  <div style="display:flex;gap:12px;margin:18px 0;">
+    <button class="btn dark" onclick="openModal('recordWasteModal')">📝 Record Waste</button>
+    <a href="{{ url_for('waste_weekly_report') }}" class="btn dark">📊 Weekly Report</a>
+  </div>
+  {% endif %}
+
   <div class="card pad" style="margin-top:16px;">
     <div style="font-weight:900;font-size:18px;">Waste Entries</div>
     <div class="page-sub">Most recent first</div>
@@ -54,5 +61,52 @@
         {% endfor %}
       </div>
     {% endif %}
+  </div>
+
+  <!-- Record Waste Modal -->
+  <div class="modal-backdrop" id="recordWasteModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">Record Waste</div>
+          <div class="modal-sub">Log wasted ingredients</div>
+        </div>
+        <button class="close" onclick="closeModal('recordWasteModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form method="post" action="{{ url_for('record_waste') }}">
+          <div style="margin-bottom:12px;">
+            <label>Ingredient</label>
+            <select name="ingredient_id" class="select" style="width:100%;" required>
+              <option value="">Select ingredient...</option>
+              {% for r in rows %}
+              <option value="{{ r.ingredient_id }}">{{ r.ingredient_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div style="margin-bottom:12px;">
+            <label>Amount Wasted</label>
+            <input type="number" name="amount_wasted" step="0.01" min="0.01" required style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+          </div>
+
+          <div style="margin-bottom:12px;">
+            <label>Reason</label>
+            <select name="reason" class="select" style="width:100%;margin-bottom:8px;">
+              <option value="Expired">Expired</option>
+              <option value="Damaged">Damaged</option>
+              <option value="Overproduction">Overproduction</option>
+              <option value="Spoiled">Spoiled</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+            <button type="button" class="btn gray" onclick="closeModal('recordWasteModal')">Cancel</button>
+            <button type="submit" class="btn dark">Record Waste</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 {% endblock %}
