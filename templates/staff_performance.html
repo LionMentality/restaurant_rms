@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1 class="page-title">Staff Performance Report</h1>
+  <p class="page-sub">Sales and order metrics by staff member</p>
+
+  {% for member in staff %}
+  <div class="row" style="margin-top:12px;">
+    <div class="row-left">
+      <div>
+        <div class="row-title">{{ member.name }} {{ member.surname }}</div>
+        <div class="row-sub">{{ member.orders_handled }} orders handled • {{ member.days_worked }} days worked</div>
+      </div>
+    </div>
+    <div class="row-right">
+      <div style="font-weight:800;">${{ "%.2f"|format(member.total_sales) }}</div>
+      <div style="font-size:13px;color:var(--muted);">Avg Order: ${{ "%.2f"|format(member.avg_order_value) }}</div>
+    </div>
+  </div>
+  {% endfor %}
+
+  <div style="margin-top:24px;">
+    <a href="{{ url_for('reports_dashboard') }}" class="btn gray">Back to Reports</a>
+  </div>
+{% endblock %}

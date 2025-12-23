@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1 class="page-title">Menu Item Cost Analysis</h1>
+  <p class="page-sub">{{ item.name }}</p>
+
+  <div class="grid cols-3">
+    <div class="card kpi">
+      <div class="label">Menu Price</div>
+      <div class="value green">${{ "%.2f"|format(item.menu_price) }}</div>
+    </div>
+
+    <div class="card kpi">
+      <div class="label">Ingredient Cost</div>
+      <div class="value orange">${{ "%.2f"|format(item.ingredient_cost) }}</div>
+    </div>
+
+    <div class="card kpi">
+      <div class="label">Profit Margin</div>
+      <div class="value {% if item.profit_margin > 0 %}green{% else %}red{% endif %}">${{ "%.2f"|format(item.profit_margin) }}</div>
+      <div class="hint">{{ "%.1f"|format(item.profit_percentage) }}% margin</div>
+    </div>
+  </div>
+
+  <h2 style="margin:26px 0 12px;">Ingredient Breakdown</h2>
+  {% for ing in ingredients %}
+  <div class="row" style="margin-top:12px;">
+    <div class="row-left">
+      <div>
+        <div class="row-title">{{ ing.ingredient_name }}</div>
+        <div class="row-sub">{{ ing.quantity_required }} {{ ing.unit }} @ ${{ "%.2f"|format(ing.average_unit_cost) }}/{{ ing.unit }}</div>
+      </div>
+    </div>
+    <div class="row-right">
+      <div style="font-weight:800;">${{ "%.2f"|format(ing.ingredient_total_cost) }}</div>
+    </div>
+  </div>
+  {% endfor %}
+
+  <div style="margin-top:24px;">
+    <a href="{{ url_for('menu_page') }}" class="btn gray">Back to Menu</a>
+  </div>
+{% endblock %}

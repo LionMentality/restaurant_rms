@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1 class="page-title">Search Orders</h1>
+  <p class="page-sub">Find orders by date, staff, status, or table number</p>
+
+  <form method="get" class="card pad" style="margin-bottom:20px;">
+    <div class="grid cols-2" style="margin-bottom:12px;">
+      <div>
+        <label style="font-weight:700;margin-bottom:6px;display:block;">Start Date</label>
+        <input type="date" name="start_date" value="{{ start_date }}" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+      </div>
+      <div>
+        <label style="font-weight:700;margin-bottom:6px;display:block;">End Date</label>
+        <input type="date" name="end_date" value="{{ end_date }}" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+      </div>
+    </div>
+
+    <div class="grid cols-3">
+      <div>
+        <label style="font-weight:700;margin-bottom:6px;display:block;">Staff Name</label>
+        <input type="text" name="staff_name" value="{{ staff_name }}" placeholder="Search by name..." style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+      </div>
+      <div>
+        <label style="font-weight:700;margin-bottom:6px;display:block;">Payment Status</label>
+        <select name="payment_status" class="select" style="width:100%;">
+          <option value="">All Statuses</option>
+          <option value="PAID" {% if payment_status == 'PAID' %}selected{% endif %}>Paid</option>
+          <option value="UNPAID" {% if payment_status == 'UNPAID' %}selected{% endif %}>Unpaid</option>
+          <option value="CANCELLED" {% if payment_status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-weight:700;margin-bottom:6px;display:block;">Table Number</label>
+        <input type="text" name="table_number" value="{{ table_number }}" placeholder="e.g., 5" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+      </div>
+    </div>
+
+    <div style="margin-top:16px;display:flex;gap:10px;">
+      <button type="submit" class="btn dark">Search Orders</button>
+      <a href="{{ url_for('tables_page') }}" class="btn gray">Back to Tables</a>
+    </div>
+  </form>
+
+  <h2 style="margin:26px 0 12px;">Search Results ({{ orders|length }} orders)</h2>
+  {% for order in orders %}
+  <div class="row" style="margin-top:12px;">
+    <div class="row-left">
+      <div>
+        <div class="row-title">Order #{{ order.order_id }} - Table {{ order.table_number }}</div>
+        <div class="row-sub">{{ order.order_datetime }} • Server: {{ order.staff_name }}</div>
+        {% if order.special_requests %}
+        <div style="font-size:13px;color:var(--muted);margin-top:4px;">Note: {{ order.special_requests }}</div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="row-right">
+      <div style="font-weight:800;">${{ "%.2f"|format(order.total_amount) }}</div>
+      <span class="badge {% if order.payment_status == 'PAID' %}green{% elif order.payment_status == 'UNPAID' %}orange{% else %}gray{% endif %}">{{ order.payment_status }}</span>
+    </div>
+  </div>
+  {% endfor %}
+
+  {% if orders|length == 0 %}
+  <div class="card pad">
+    <b>No orders found matching your criteria.</b>
+  </div>
+  {% endif %}
+{% endblock %}

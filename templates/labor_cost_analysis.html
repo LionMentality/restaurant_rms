@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1 class="page-title">Labor Cost Analysis</h1>
+  <p class="page-sub">Analyze labor costs vs revenue</p>
+
+  {% for item in analysis %}
+  <div class="row" style="margin-top:12px;">
+    <div class="row-left">
+      <div>
+        <div class="row-title">{{ item.period_start }} to {{ item.period_end }}</div>
+        <div class="row-sub">{{ item.total_hours }}h • ${{ "%.2f"|format(item.total_wages) }} wages</div>
+      </div>
+    </div>
+    <div class="row-right">
+      <div style="font-weight:800;">Revenue: ${{ "%.2f"|format(item.period_revenue or 0) }}</div>
+      <div style="font-size:13px;color:{% if item.labor_cost_percentage > 30 %}var(--red){% else %}var(--muted){% endif %};">Labor Cost: {{ "%.1f"|format(item.labor_cost_percentage or 0) }}%</div>
+    </div>
+  </div>
+  {% endfor %}
+
+  {% if analysis|length == 0 %}
+  <div class="card pad">
+    <b>No labor cost data available.</b>
+  </div>
+  {% endif %}
+
+  <div style="margin-top:24px;">
+    <a href="{{ url_for('payroll_page') }}" class="btn gray">Back to Payroll</a>
+  </div>
+{% endblock %}

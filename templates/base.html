@@ -40,8 +40,19 @@
         <a class="{{ 'active' if active=='tables' else '' }}" href="{{ url_for('tables_page') }}">
           <span class="icon">🍽️</span> Table Management
         </a>
+        {% if session.get("role") == "manager" %}
         <a class="{{ 'active' if active=='staff' else '' }}" href="{{ url_for('staff_management_page') }}">
           <span class="icon">👥</span> Staff Management
+        </a>
+        <a class="{{ 'active' if active=='payroll' else '' }}" href="{{ url_for('payroll_page') }}">
+          <span class="icon">💰</span> Payroll
+        </a>
+        <a class="{{ 'active' if active=='reports' else '' }}" href="{{ url_for('reports_dashboard') }}">
+          <span class="icon">📊</span> Reports
+        </a>
+        {% endif %}
+        <a href="{{ url_for('search_orders') }}">
+          <span class="icon">🔍</span> Search Orders
         </a>
       </nav>
 
@@ -53,6 +64,15 @@
     </aside>
 
     <main class="main">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="card pad" style="margin-bottom:16px;border-color:{% if category == 'error' %}#ffe5ea;background:#fff7f9{% else %}#d1fae5;background:#f0fdf4{% endif %};">
+              <span style="color:{% if category == 'error' %}#be123c{% else %}#166534{% endif %};font-weight:700;">{{ message }}</span>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
       {% block content %}{% endblock %}
     </main>
   </div>

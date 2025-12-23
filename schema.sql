@@ -379,3 +379,71 @@ BEGIN
 END$$
 
 DELIMITER ;
+
+-- ---------- DATABASE VIEWS ----------
+
+-- View for low stock items
+CREATE VIEW view_low_stock_items AS
+SELECT
+    ing.ingredient_id,
+    ing.name,
+    ing.unit,
+    ing.minimum_stock_threshold,
+    ii.current_quantity,
+    (ing.minimum_stock_threshold - ii.current_quantity) AS shortage,
+    ii.average_unit_cost
+FROM ingredient ing
+JOIN inventory_item ii ON ing.ingredient_id = ii.ingredient_id
+WHERE ii.current_quantity < ing.minimum_stock_threshold;
+
+-- View for menu profitability analysis
+CREATE VIEW view_menu_profitability AS
+SELECT
+    mi.menu_item_id,
+    mi.name,
+    mi.category,
+    mi.menu_price,
+    COALESCE(SUM(mii.quantity_required * ii.average_unit_cost), 0) AS ingredient_cost,
+    (mi.menu_price - COALESCE(SUM(mii.quantity_required * ii.average_unit_cost), 0)) AS profit_margin,
+    CASE
+        WHEN mi.menu_price > 0 THEN
+            ((mi.menu_price - COALESCE(SUM(mii.quantity_required * ii.average_unit_cost), 0)) / mi.menu_price * 100)
+        ELSE 0
+    END AS profit_percentage
+FROM menu_item mi
+LEFT JOIN menu_item_ingredient mii ON mi.menu_item_id = mii.menu_item_id
+LEFT JOIN inventory_item ii ON mii.ingredient_id = ii.ingredient_id
+GROUP BY mi.menu_item_id;
+
+-- View for staff performance metrics
+CREATE VIEW view_staff_performance AS
+SELECT
+    e.employee_id,
+    e.name,
+    e.surname,
+    COUNT(DISTINCT co.order_id) AS orders_handled,
+    COALESCE(SUM(co.total_amount), 0) AS total_sales,
+    COALESCE(AVG(co.total_amount), 0) AS avg_order_value,
+    COUNT(DISTINCT DATE(co.order_datetime)) AS days_worked
+FROM employee e
+JOIN staff s ON e.employee_id = s.employee_id
+LEFT JOIN customer_order co ON s.employee_id = co.staff_id
+GROUP BY e.employee_id;
+
+-- ---------- ADDITIONAL CHECK CONSTRAINTS ----------
+
+-- Ensure menu prices are positive
+ALTER TABLE menu_item ADD CONSTRAINT chk_menu_price_positive
+    CHECK (menu_price > 0);
+
+-- Ensure order quantities are reasonable (between 1 and 50)
+ALTER TABLE order_item ADD CONSTRAINT chk_order_qty_range
+    CHECK (quantity > 0 AND quantity <= 50);
+
+-- Ensure inventory quantities are non-negative
+ALTER TABLE inventory_item ADD CONSTRAINT chk_inventory_qty_nonnegative
+    CHECK (current_quantity >= 0);
+
+-- Ensure payroll hours are reasonable (max 168 hours per week)
+ALTER TABLE payroll ADD CONSTRAINT chk_payroll_hours_valid
+    CHECK (hours_worked >= 0 AND hours_worked <= 168);

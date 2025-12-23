@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1 class="page-title">Payroll Management</h1>
+  <p class="page-sub">Calculate and manage employee payroll</p>
+
+  <div style="display:flex;gap:12px;margin-bottom:20px;">
+    <button class="btn dark" onclick="openModal('calculatePayrollModal')">💰 Calculate Payroll</button>
+    <a href="{{ url_for('labor_cost_analysis') }}" class="btn dark">📊 Labor Cost Analysis</a>
+  </div>
+
+  <h2 style="margin:26px 0 12px;">Recent Payroll Records</h2>
+  {% for pr in payrolls %}
+  <div class="row" style="margin-top:12px;">
+    <div class="row-left">
+      <div>
+        <div class="row-title">{{ pr.name }} {{ pr.surname }}</div>
+        <div class="row-sub">{{ pr.pay_period_start }} to {{ pr.pay_period_end }}</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:4px;">{{ pr.hours_worked }}h worked ({{ pr.overtime_hours }}h overtime)</div>
+      </div>
+    </div>
+    <div class="row-right">
+      <div style="font-weight:800;">${{ "%.2f"|format(pr.gross_pay) }}</div>
+      <div style="font-size:13px;color:var(--muted);">Paid: {{ pr.payment_date }}</div>
+    </div>
+  </div>
+  {% endfor %}
+
+  {% if payrolls|length == 0 %}
+  <div class="card pad">
+    <b>No payroll records found.</b>
+  </div>
+  {% endif %}
+
+  <!-- Calculate Payroll Modal -->
+  <div class="modal-backdrop" id="calculatePayrollModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">Calculate Payroll</div>
+          <div class="modal-sub">Process payroll for a pay period</div>
+        </div>
+        <button class="close" onclick="closeModal('calculatePayrollModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form method="post" action="{{ url_for('calculate_payroll') }}">
+          <div style="margin-bottom:12px;">
+            <label>Period Start Date</label>
+            <input type="date" name="period_start" required style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+          </div>
+
+          <div style="margin-bottom:12px;">
+            <label>Period End Date</label>
+            <input type="date" name="period_end" required style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;">
+          </div>
+
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+            <button type="button" class="btn gray" onclick="closeModal('calculatePayrollModal')">Cancel</button>
+            <button type="submit" class="btn dark">Calculate Payroll</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock %}

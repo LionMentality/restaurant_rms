@@ -36,3 +36,6 @@ htmlcov/
 tmp/
 temp/
 *.tmp
+
+.claude/
+context/
