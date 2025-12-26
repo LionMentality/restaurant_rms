@@ -13,7 +13,7 @@
     </div>
     <div class="row-right">
       <div style="font-weight:800;">Revenue: ${{ "%.2f"|format(item.period_revenue or 0) }}</div>
-      <div style="font-size:13px;color:{% if item.labor_cost_percentage > 30 %}var(--red){% else %}var(--muted){% endif %};">Labor Cost: {{ "%.1f"|format(item.labor_cost_percentage or 0) }}%</div>
+      <div style="font-size:13px;color:{% if item.labor_cost_percentage and item.labor_cost_percentage > 30 %}var(--red){% else %}var(--muted){% endif %};">Labor Cost: {{ "%.1f"|format(item.labor_cost_percentage or 0) }}%</div>
     </div>
   </div>
   {% endfor %}

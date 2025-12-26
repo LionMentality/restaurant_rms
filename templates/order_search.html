@@ -41,6 +41,31 @@
     </div>
   </form>
 
+  {% if orders|length > 0 %}
+  <!-- Summary Statistics -->
+  <div class="grid cols-3" style="margin:20px 0;">
+    <div class="card kpi">
+      <div class="label">Total Orders</div>
+      <div class="value">{{ orders|length }}</div>
+      <div class="hint">In selected period</div>
+    </div>
+    <div class="card kpi">
+      <div class="label">Total Revenue</div>
+      <div class="value" style="color:#16a34a;">
+        ${{ "%.2f"|format(orders|sum(attribute='total_amount')) }}
+      </div>
+      <div class="hint">From all orders</div>
+    </div>
+    <div class="card kpi">
+      <div class="label">Paid Orders</div>
+      <div class="value">
+        {{ orders|selectattr('payment_status', 'equalto', 'PAID')|list|length }}
+      </div>
+      <div class="hint">{{ orders|selectattr('payment_status', 'equalto', 'UNPAID')|list|length }} still unpaid</div>
+    </div>
+  </div>
+  {% endif %}
+
   <h2 style="margin:26px 0 12px;">Search Results ({{ orders|length }} orders)</h2>
   {% for order in orders %}
   <div class="row" style="margin-top:12px;">
