@@ -1070,20 +1070,72 @@ def create_order():
 
     table_id = request.form.get("table_id", type=int)
     special_requests = request.form.get("special_requests", "").strip()
+    selected_items = request.form.getlist("menu_items")
 
     if not table_id:
         flash("Invalid table selection.", "error")
         return redirect(url_for("tables_page"))
 
+    if not selected_items:
+        flash("Please select at least one menu item.", "error")
+        return redirect(url_for("tables_page"))
+
     try:
         conn = get_conn()
-        cur = conn.cursor()
+        cur = conn.cursor(dictionary=True)
+
+        # Determine staff_id: check if current user is a staff member
+        user_id = session["user_id"]
+        cur.execute("SELECT employee_id FROM staff WHERE employee_id = %s", (user_id,))
+        staff_member = cur.fetchone()
+
+        if staff_member:
+            # Current user is staff, use their ID
+            staff_id = user_id
+        else:
+            # Current user is a manager, get any available staff member
+            cur.execute("SELECT employee_id FROM staff WHERE employee_id IN (SELECT employee_id FROM employee WHERE is_active = TRUE) LIMIT 1")
+            available_staff = cur.fetchone()
+
+            if not available_staff:
+                flash("No staff members available to assign order.", "error")
+                conn.close()
+                return redirect(url_for("tables_page"))
+
+            staff_id = available_staff["employee_id"]
 
         # Create order
         cur.execute("""
             INSERT INTO customer_order (table_id, staff_id, order_datetime, payment_status, special_requests)
             VALUES (%s, %s, NOW(), 'UNPAID', %s)
-        """, (table_id, session["user_id"], special_requests))
+        """, (table_id, staff_id, special_requests))
+
+        order_id = cur.lastrowid
+
+        # Add selected menu items to the order
+        for menu_item_id in selected_items:
+            quantity_key = f"quantity_{menu_item_id}"
+            quantity = request.form.get(quantity_key, type=int)
+
+            if not quantity or quantity <= 0:
+                quantity = 1
+
+            # Get menu item price
+            cur.execute("""
+                SELECT menu_price, is_available
+                FROM menu_item
+                WHERE menu_item_id = %s
+            """, (menu_item_id,))
+            menu_item = cur.fetchone()
+
+            if menu_item and menu_item["is_available"]:
+                unit_price = menu_item["menu_price"]
+
+                # Insert order item (triggers will handle total and inventory)
+                cur.execute("""
+                    INSERT INTO order_item (order_id, menu_item_id, quantity, unit_price, item_status)
+                    VALUES (%s, %s, %s, %s, 'ORDERED')
+                """, (order_id, menu_item_id, quantity, unit_price))
 
         # Update table status to OCCUPIED
         cur.execute("""
@@ -1093,7 +1145,7 @@ def create_order():
         """, (table_id,))
 
         conn.commit()
-        flash("Order created successfully!", "success")
+        flash("Order created successfully with items!", "success")
     except Exception as e:
         if conn:
             conn.rollback()
@@ -1307,12 +1359,22 @@ def tables_page():
             COUNT(DISTINCT co.order_id) AS parties,
             COALESCE(SUM(co.total_amount), 0) AS total_bill
         FROM restaurant_table t
-        LEFT JOIN customer_order co ON co.table_id = t.table_id 
+        LEFT JOIN customer_order co ON co.table_id = t.table_id
             AND co.payment_status = 'UNPAID'
         GROUP BY t.table_id, t.table_number, t.capacity, t.status
         ORDER BY t.table_number
     """)
     tables = cur.fetchall()
+
+    # Get available menu items for the new order modal
+    cur.execute("""
+        SELECT menu_item_id, name, category, menu_price, is_available
+        FROM menu_item
+        WHERE is_available = TRUE
+        ORDER BY category, name
+    """)
+    menu_items = cur.fetchall()
+
     conn.close()
 
     for t in tables:
@@ -1331,7 +1393,8 @@ def tables_page():
         occupied_tables=occupied_tables,
         active_orders=active_orders,
         current_revenue=float(current_revenue),
-        tables=tables
+        tables=tables,
+        menu_items=menu_items
     )
 
 @app.post("/tables/update-status")
