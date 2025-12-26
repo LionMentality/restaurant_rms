@@ -362,9 +362,16 @@ def request_timeoff():
     conn = get_conn()
     cur = conn.cursor()
 
+    # Check if user is a staff member
     cur.execute("SELECT manager_id FROM staff WHERE employee_id=%s", (staff_id,))
     row = cur.fetchone()
-    manager_id = row[0] if row else None
+
+    if not row:
+        conn.close()
+        flash("Only staff members can submit time off requests.", "error")
+        return redirect(url_for("schedule_page"))
+
+    manager_id = row[0]
 
     cur.execute("""
         INSERT INTO staff_request
@@ -392,9 +399,17 @@ def request_overtime():
 
     conn = get_conn()
     cur = conn.cursor()
+
+    # Check if user is a staff member
     cur.execute("SELECT manager_id FROM staff WHERE employee_id=%s", (staff_id,))
     row = cur.fetchone()
-    manager_id = row[0] if row else None
+
+    if not row:
+        conn.close()
+        flash("Only staff members can submit overtime requests.", "error")
+        return redirect(url_for("schedule_page"))
+
+    manager_id = row[0]
 
     cur.execute("""
         INSERT INTO staff_request
@@ -421,9 +436,17 @@ def request_availability():
 
     conn = get_conn()
     cur = conn.cursor()
+
+    # Check if user is a staff member
     cur.execute("SELECT manager_id FROM staff WHERE employee_id=%s", (staff_id,))
     row = cur.fetchone()
-    manager_id = row[0] if row else None
+
+    if not row:
+        conn.close()
+        flash("Only staff members can submit availability requests.", "error")
+        return redirect(url_for("schedule_page"))
+
+    manager_id = row[0]
 
     cur.execute("""
         INSERT INTO staff_request
@@ -660,6 +683,74 @@ def update_threshold():
         if conn:
             conn.rollback()
         flash(f"Error updating threshold: {str(e)}", "error")
+    finally:
+        if conn:
+            conn.close()
+
+    return redirect(url_for("inventory_page"))
+
+@app.post("/inventory/delete/<int:ingredient_id>")
+def delete_ingredient(ingredient_id):
+    if not require_login():
+        return redirect(url_for("login"))
+    if not require_manager():
+        flash("Access denied. Manager privileges required.", "error")
+        return redirect(url_for("inventory_page"))
+
+    try:
+        conn = get_conn()
+        cur = conn.cursor(dictionary=True)
+
+        # Get ingredient name for confirmation message
+        cur.execute("SELECT name FROM ingredient WHERE ingredient_id = %s", (ingredient_id,))
+        ingredient = cur.fetchone()
+
+        if not ingredient:
+            flash("Ingredient not found.", "error")
+            conn.close()
+            return redirect(url_for("inventory_page"))
+
+        ingredient_name = ingredient["name"]
+
+        # RESTRICT: Check if ingredient is used in any menu items
+        cur.execute("""
+            SELECT DISTINCT mi.menu_item_id, mi.name
+            FROM menu_item mi
+            JOIN menu_item_ingredient mii ON mi.menu_item_id = mii.menu_item_id
+            WHERE mii.ingredient_id = %s
+        """, (ingredient_id,))
+        associated_menu_items = cur.fetchall()
+
+        if associated_menu_items:
+            # Ingredient is used in menu items - RESTRICT deletion
+            menu_names = ", ".join([item["name"] for item in associated_menu_items])
+            flash(f"Cannot delete ingredient '{ingredient_name}' because it is used in the following menu items: {menu_names}. Please remove it from these menu items first.", "error")
+            conn.close()
+            return redirect(url_for("inventory_page"))
+
+        # Ingredient is not used in any menu items - safe to delete
+        # Delete inventory alerts first (due to foreign key constraint)
+        cur.execute("DELETE FROM inventory_alert WHERE ingredient_id = %s", (ingredient_id,))
+
+        # Delete waste tracking records
+        cur.execute("DELETE FROM waste_tracking WHERE ingredient_id = %s", (ingredient_id,))
+
+        # Delete inventory usage records
+        cur.execute("DELETE FROM inventory_usage WHERE ingredient_id = %s", (ingredient_id,))
+
+        # Delete inventory item
+        cur.execute("DELETE FROM inventory_item WHERE ingredient_id = %s", (ingredient_id,))
+
+        # Finally delete the ingredient
+        cur.execute("DELETE FROM ingredient WHERE ingredient_id = %s", (ingredient_id,))
+
+        conn.commit()
+        flash(f"Ingredient '{ingredient_name}' deleted successfully!", "success")
+
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        flash(f"Error deleting ingredient: {str(e)}", "error")
     finally:
         if conn:
             conn.close()
@@ -1605,6 +1696,85 @@ def update_staff_request_status():
 
     return redirect(url_for("staff_management_page"))
 
+@app.post("/staff-management/delete/<int:employee_id>")
+def delete_staff_member(employee_id):
+    if not require_login():
+        return redirect(url_for("login"))
+    if not require_manager():
+        flash("Access denied. Manager privileges required.", "error")
+        return redirect(url_for("staff_management_page"))
+
+    try:
+        conn = get_conn()
+        cur = conn.cursor(dictionary=True)
+
+        # Get employee details
+        cur.execute("""
+            SELECT e.name, e.surname, e.employee_id
+            FROM employee e
+            JOIN staff s ON e.employee_id = s.employee_id
+            WHERE e.employee_id = %s AND s.manager_id = %s
+        """, (employee_id, session["user_id"]))
+        employee = cur.fetchone()
+
+        if not employee:
+            flash("Employee not found or you don't have permission to delete them.", "error")
+            conn.close()
+            return redirect(url_for("staff_management_page"))
+
+        employee_name = f"{employee['name']} {employee['surname']}"
+
+        # RESTRICT: Check for dependencies
+        dependencies = []
+
+        # Check for orders
+        cur.execute("SELECT COUNT(*) as count FROM customer_order WHERE staff_id = %s", (employee_id,))
+        order_count = cur.fetchone()["count"]
+        if order_count > 0:
+            dependencies.append(f"{order_count} order(s)")
+
+        # Check for schedules
+        cur.execute("SELECT COUNT(*) as count FROM schedule WHERE staff_id = %s", (employee_id,))
+        schedule_count = cur.fetchone()["count"]
+        if schedule_count > 0:
+            dependencies.append(f"{schedule_count} schedule(s)")
+
+        # Check for payroll records
+        cur.execute("SELECT COUNT(*) as count FROM payroll WHERE employee_id = %s", (employee_id,))
+        payroll_count = cur.fetchone()["count"]
+        if payroll_count > 0:
+            dependencies.append(f"{payroll_count} payroll record(s)")
+
+        if dependencies:
+            # Has dependencies - RESTRICT deletion
+            dep_str = ", ".join(dependencies)
+            flash(f"Cannot delete {employee_name} because they have associated records: {dep_str}. Please deactivate the employee instead.", "error")
+            conn.close()
+            return redirect(url_for("staff_management_page"))
+
+        # No dependencies - safe to delete
+        # Delete staff requests
+        cur.execute("DELETE FROM staff_request WHERE staff_id = %s", (employee_id,))
+
+        # Delete from staff table
+        cur.execute("DELETE FROM staff WHERE employee_id = %s", (employee_id,))
+
+        # Delete from employee table
+        cur.execute("DELETE FROM employee WHERE employee_id = %s", (employee_id,))
+
+        conn.commit()
+        flash(f"Staff member {employee_name} deleted successfully!", "success")
+
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        flash(f"Error deleting staff member: {str(e)}", "error")
+    finally:
+        if conn:
+            conn.close()
+
+    return redirect(url_for("staff_management_page"))
+
 @app.post("/schedule/create")
 def create_schedule():
     if not require_login():
@@ -1822,7 +1992,7 @@ def calculate_payroll():
         # Calculate hours per employee
         cur.execute("""
             SELECT
-                s.staff_id,
+                s.employee_id,
                 e.salary,
                 SUM(TIMESTAMPDIFF(HOUR, sch.start_time, sch.end_time)) AS total_hours,
                 SUM(CASE
@@ -1834,7 +2004,7 @@ def calculate_payroll():
             JOIN staff s ON sch.staff_id = s.employee_id
             JOIN employee e ON s.employee_id = e.employee_id
             WHERE sch.shift_date BETWEEN %s AND %s
-            GROUP BY s.staff_id
+            GROUP BY s.employee_id
         """, (period_start, period_end))
 
         employees = cur.fetchall()
@@ -1852,7 +2022,7 @@ def calculate_payroll():
             cur.execute("""
                 INSERT INTO payroll (employee_id, pay_period_start, pay_period_end, hours_worked, overtime_hours, gross_pay, payment_date)
                 VALUES (%s, %s, %s, %s, %s, %s, CURDATE())
-            """, (emp["staff_id"], period_start, period_end, total_hours, overtime_hours, gross_pay))
+            """, (emp["employee_id"], period_start, period_end, total_hours, overtime_hours, gross_pay))
 
         # Create labor cost record
         cur.execute("""
