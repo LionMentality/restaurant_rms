@@ -41,7 +41,6 @@ DB_HOST=127.0.0.1
 DB_USER=rms_user
 DB_PASSWORD=rms_password
 DB_NAME=rms
-SECRET_KEY=your-secret-key-here
 ```
 
 ### 4. Initialize database
