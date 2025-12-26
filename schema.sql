@@ -1,10 +1,15 @@
-
+-- ==========================================
+-- Restaurant Management System (RMS)
+-- Schema, Triggers, and Views
+-- ==========================================
 
 DROP DATABASE IF EXISTS rms;
 CREATE DATABASE rms CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE rms;
 
--- ---------- EMPLOYEES / ROLES ----------
+-- ==========================================
+-- EMPLOYEES / ROLES
+-- ==========================================
 
 CREATE TABLE employee (
   employee_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -48,7 +53,9 @@ CREATE TABLE manages (
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
--- ---------- SCHEDULING / REQUESTS ----------
+-- ==========================================
+-- SCHEDULING / REQUESTS
+-- ==========================================
 
 CREATE TABLE schedule (
   schedule_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -87,7 +94,9 @@ CREATE TABLE staff_request (
   CONSTRAINT chk_request_status CHECK (status IN ('PENDING','APPROVED','REJECTED'))
 ) ENGINE=InnoDB;
 
--- ---------- PAYROLL / COSTS ----------
+-- ==========================================
+-- PAYROLL / COSTS
+-- ==========================================
 
 CREATE TABLE payroll (
   payroll_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -123,7 +132,9 @@ CREATE TABLE payroll_labor_cost (
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
--- ---------- INGREDIENTS / INVENTORY ----------
+-- ==========================================
+-- INGREDIENTS / INVENTORY
+-- ==========================================
 
 CREATE TABLE ingredient (
   ingredient_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -181,7 +192,9 @@ CREATE TABLE inventory_alert (
     ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
--- ---------- MENU / TABLES / ORDERS ----------
+-- ==========================================
+-- MENU / TABLES / ORDERS
+-- ==========================================
 
 CREATE TABLE menu_item (
   menu_item_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -260,7 +273,9 @@ CREATE TABLE customer_review (
   CONSTRAINT chk_rating CHECK (rating BETWEEN 1 AND 5)
 ) ENGINE=InnoDB;
 
--- ---------- SALES / EXPENSES / REPORTS ----------
+-- ==========================================
+-- SALES / EXPENSES / REPORTS
+-- ==========================================
 
 CREATE TABLE sale (
   order_id INT PRIMARY KEY,
@@ -318,7 +333,25 @@ CREATE TABLE report_menu_item (
     ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
--- ---------- TRIGGERS ----------
+-- ==========================================
+-- CHECK CONSTRAINTS
+-- ==========================================
+
+ALTER TABLE menu_item ADD CONSTRAINT chk_menu_price_positive
+    CHECK (menu_price > 0);
+
+ALTER TABLE order_item ADD CONSTRAINT chk_order_qty_range
+    CHECK (quantity > 0 AND quantity <= 50);
+
+ALTER TABLE inventory_item ADD CONSTRAINT chk_inventory_qty_nonnegative
+    CHECK (current_quantity >= 0);
+
+ALTER TABLE payroll ADD CONSTRAINT chk_payroll_hours_valid
+    CHECK (hours_worked >= 0 AND hours_worked <= 168);
+
+-- ==========================================
+-- TRIGGERS
+-- ==========================================
 
 DELIMITER $$
 
@@ -380,7 +413,9 @@ END$$
 
 DELIMITER ;
 
--- ---------- DATABASE VIEWS ----------
+-- ==========================================
+-- VIEWS FOR REPORTING
+-- ==========================================
 
 -- View for low stock items
 CREATE VIEW view_low_stock_items AS
@@ -413,37 +448,25 @@ SELECT
 FROM menu_item mi
 LEFT JOIN menu_item_ingredient mii ON mi.menu_item_id = mii.menu_item_id
 LEFT JOIN inventory_item ii ON mii.ingredient_id = ii.ingredient_id
-GROUP BY mi.menu_item_id;
+GROUP BY mi.menu_item_id, mi.name, mi.category, mi.menu_price;
 
 -- View for staff performance metrics
 CREATE VIEW view_staff_performance AS
 SELECT
     e.employee_id,
-    e.name,
-    e.surname,
-    COUNT(DISTINCT co.order_id) AS orders_handled,
+    CONCAT(e.name, ' ', e.surname) AS staff_name,
+    s.role,
+    COUNT(DISTINCT co.order_id) AS total_orders,
     COALESCE(SUM(co.total_amount), 0) AS total_sales,
-    COALESCE(AVG(co.total_amount), 0) AS avg_order_value,
-    COUNT(DISTINCT DATE(co.order_datetime)) AS days_worked
+    COALESCE(AVG(co.total_amount), 0) AS avg_order_value
 FROM employee e
 JOIN staff s ON e.employee_id = s.employee_id
-LEFT JOIN customer_order co ON s.employee_id = co.staff_id
-GROUP BY e.employee_id;
+LEFT JOIN customer_order co ON e.employee_id = co.staff_id
+WHERE co.payment_status = 'PAID'
+GROUP BY e.employee_id, e.name, e.surname, s.role;
 
--- ---------- ADDITIONAL CHECK CONSTRAINTS ----------
+-- ==========================================
+-- SCHEMA CREATION COMPLETE
+-- ==========================================
 
--- Ensure menu prices are positive
-ALTER TABLE menu_item ADD CONSTRAINT chk_menu_price_positive
-    CHECK (menu_price > 0);
-
--- Ensure order quantities are reasonable (between 1 and 50)
-ALTER TABLE order_item ADD CONSTRAINT chk_order_qty_range
-    CHECK (quantity > 0 AND quantity <= 50);
-
--- Ensure inventory quantities are non-negative
-ALTER TABLE inventory_item ADD CONSTRAINT chk_inventory_qty_nonnegative
-    CHECK (current_quantity >= 0);
-
--- Ensure payroll hours are reasonable (max 168 hours per week)
-ALTER TABLE payroll ADD CONSTRAINT chk_payroll_hours_valid
-    CHECK (hours_worked >= 0 AND hours_worked <= 168);
+SELECT 'Database schema, triggers, and views created successfully!' AS Status;

@@ -1,3 +1,7 @@
+-- ==========================================
+-- Restaurant Management System (RMS)
+-- Sample Data & Initial Setup
+-- ==========================================
 
 USE rms;
 
@@ -258,9 +262,10 @@ INSERT INTO schedule (staff_id, shift_date, start_time, end_time, assigned_role)
 (7, '2025-12-12', '10:00:00', '22:00:00', 'Head Chef');
 
 -- ==========================================
--- 8. CUSTOMER ORDERS (Active orders)
+-- 8. CUSTOMER ORDERS (Active and Historical)
 -- ==========================================
 
+-- Current active orders (UNPAID)
 INSERT INTO customer_order (table_id, staff_id, order_datetime, payment_status, special_requests, total_amount) VALUES
 (1, 3, '2025-12-13 12:15:00', 'UNPAID', 'No onions please', 0),
 (2, 3, '2025-12-13 12:30:00', 'UNPAID', NULL, 0),
@@ -268,8 +273,35 @@ INSERT INTO customer_order (table_id, staff_id, order_datetime, payment_status, 
 (7, 5, '2025-12-13 13:00:00', 'UNPAID', NULL, 0),
 (8, 3, '2025-12-13 12:45:00', 'UNPAID', 'Gluten-free if possible', 0);
 
+-- Historical orders (PAID) - spread over 30 days
+INSERT INTO customer_order (table_id, staff_id, order_datetime, total_amount, payment_status, special_requests) VALUES
+-- 30 days ago
+(1, 3, DATE_SUB(NOW(), INTERVAL 30 DAY), 45.50, 'PAID', 'Extra napkins'),
+(2, 3, DATE_SUB(NOW(), INTERVAL 30 DAY), 67.80, 'PAID', NULL),
+-- 20 days ago
+(3, 3, DATE_SUB(NOW(), INTERVAL 20 DAY), 89.25, 'PAID', 'No onions'),
+(4, 3, DATE_SUB(NOW(), INTERVAL 20 DAY), 123.40, 'PAID', 'Birthday celebration'),
+-- 15 days ago
+(1, 3, DATE_SUB(NOW(), INTERVAL 15 DAY), 56.90, 'PAID', NULL),
+(5, 3, DATE_SUB(NOW(), INTERVAL 15 DAY), 78.30, 'PAID', 'Gluten free'),
+-- 10 days ago
+(2, 3, DATE_SUB(NOW(), INTERVAL 10 DAY), 91.15, 'PAID', NULL),
+(6, 3, DATE_SUB(NOW(), INTERVAL 10 DAY), 134.50, 'PAID', 'Large party'),
+-- 7 days ago
+(3, 3, DATE_SUB(NOW(), INTERVAL 7 DAY), 45.75, 'PAID', NULL),
+(7, 3, DATE_SUB(NOW(), INTERVAL 7 DAY), 88.90, 'PAID', 'Window seat'),
+-- 5 days ago
+(1, 3, DATE_SUB(NOW(), INTERVAL 5 DAY), 102.40, 'PAID', NULL),
+(4, 3, DATE_SUB(NOW(), INTERVAL 5 DAY), 76.85, 'PAID', 'Quick service needed'),
+-- 3 days ago
+(2, 3, DATE_SUB(NOW(), INTERVAL 3 DAY), 65.20, 'PAID', NULL),
+(5, 3, DATE_SUB(NOW(), INTERVAL 3 DAY), 145.60, 'PAID', 'Anniversary dinner'),
+-- Yesterday
+(3, 3, DATE_SUB(NOW(), INTERVAL 1 DAY), 54.30, 'PAID', NULL),
+(6, 3, DATE_SUB(NOW(), INTERVAL 1 DAY), 98.75, 'PAID', 'Vegetarian options');
+
 -- ==========================================
--- 9. ORDER ITEMS
+-- 9. ORDER ITEMS (for active orders)
 -- ==========================================
 
 INSERT INTO order_item (order_id, menu_item_id, quantity, unit_price, item_status) VALUES
@@ -334,16 +366,178 @@ INSERT INTO expense (manager_id, expense_type, expense_date, amount, description
 (1, 'Utilities', '2025-12-10', 850.00, 'Electricity and water bills'),
 (2, 'Maintenance', '2025-12-12', 600.00, 'HVAC system repair');
 
+-- ==========================================
+-- 13. PAYROLL (Sample payroll for Dec 8-14)
+-- ==========================================
+
+-- Emily Williams (employee_id: 3) - 40 hours
+INSERT INTO payroll (employee_id, pay_period_start, pay_period_end, hours_worked, overtime_hours, gross_pay, payment_date)
+VALUES (3, '2025-12-08', '2025-12-14', 40.00, 0.00, 673.08, '2025-12-15');
+
+-- Michael Chen (employee_id: 4) - 40 hours
+INSERT INTO payroll (employee_id, pay_period_start, pay_period_end, hours_worked, overtime_hours, gross_pay, payment_date)
+VALUES (4, '2025-12-08', '2025-12-14', 40.00, 0.00, 634.62, '2025-12-15');
+
+-- David Martinez (employee_id: 5) - 32 hours
+INSERT INTO payroll (employee_id, pay_period_start, pay_period_end, hours_worked, overtime_hours, gross_pay, payment_date)
+VALUES (5, '2025-12-08', '2025-12-14', 32.00, 0.00, 522.88, '2025-12-15');
+
+-- Robert Thompson (employee_id: 7) - 60 hours (20 overtime)
+INSERT INTO payroll (employee_id, pay_period_start, pay_period_end, hours_worked, overtime_hours, gross_pay, payment_date)
+VALUES (7, '2025-12-08', '2025-12-14', 60.00, 20.00, 1643.27, '2025-12-15');
+
+-- Labor cost record
+INSERT INTO labor_cost (period_start, period_end, total_hours, total_wages)
+VALUES ('2025-12-08', '2025-12-14', 172.00, 3473.85);
+
+-- Link payroll to labor cost
+SET @labor_cost_id = LAST_INSERT_ID();
+INSERT INTO payroll_labor_cost (payroll_id, labor_cost_id)
+SELECT payroll_id, @labor_cost_id
+FROM payroll
+WHERE pay_period_start = '2025-12-08' AND pay_period_end = '2025-12-14';
+
+-- ==========================================
+-- 14. INVENTORY USAGE (30 days of data)
+-- ==========================================
+
+-- Get ingredient IDs for common items
+SET @tomato_id = 1;
+SET @lettuce_id = 2;
+SET @chicken_id = 9;
+SET @beef_id = 10;
+SET @cheese_id = 13;
+SET @flour_id = 20;
+
+-- Inventory adjustments (shipments) over 30 days
+INSERT INTO inventory_usage (ingredient_id, usage_date, quantity_used, usage_type, note) VALUES
+-- Month ago
+(@tomato_id, DATE_SUB(CURDATE(), INTERVAL 30 DAY), 50, 'ADJUSTMENT', 'Monthly shipment received'),
+(@lettuce_id, DATE_SUB(CURDATE(), INTERVAL 30 DAY), 30, 'ADJUSTMENT', 'Monthly shipment received'),
+(@chicken_id, DATE_SUB(CURDATE(), INTERVAL 28 DAY), 40, 'ADJUSTMENT', 'Weekly shipment received'),
+(@beef_id, DATE_SUB(CURDATE(), INTERVAL 28 DAY), 35, 'ADJUSTMENT', 'Weekly shipment received'),
+(@cheese_id, DATE_SUB(CURDATE(), INTERVAL 25 DAY), 25, 'ADJUSTMENT', 'Shipment received'),
+(@flour_id, DATE_SUB(CURDATE(), INTERVAL 25 DAY), 100, 'ADJUSTMENT', 'Bulk order received'),
+
+-- 3 weeks ago
+(@tomato_id, DATE_SUB(CURDATE(), INTERVAL 21 DAY), 30, 'ADJUSTMENT', 'Weekly shipment received'),
+(@lettuce_id, DATE_SUB(CURDATE(), INTERVAL 21 DAY), 20, 'ADJUSTMENT', 'Weekly shipment received'),
+(@chicken_id, DATE_SUB(CURDATE(), INTERVAL 20 DAY), 45, 'ADJUSTMENT', 'Weekly shipment received'),
+(@beef_id, DATE_SUB(CURDATE(), INTERVAL 20 DAY), 30, 'ADJUSTMENT', 'Weekly shipment received'),
+
+-- 2 weeks ago
+(@tomato_id, DATE_SUB(CURDATE(), INTERVAL 14 DAY), 35, 'ADJUSTMENT', 'Weekly shipment received'),
+(@lettuce_id, DATE_SUB(CURDATE(), INTERVAL 14 DAY), 25, 'ADJUSTMENT', 'Weekly shipment received'),
+(@chicken_id, DATE_SUB(CURDATE(), INTERVAL 13 DAY), 40, 'ADJUSTMENT', 'Weekly shipment received'),
+(@beef_id, DATE_SUB(CURDATE(), INTERVAL 13 DAY), 35, 'ADJUSTMENT', 'Weekly shipment received'),
+
+-- Last week
+(@tomato_id, DATE_SUB(CURDATE(), INTERVAL 7 DAY), 30, 'ADJUSTMENT', 'Weekly shipment received'),
+(@lettuce_id, DATE_SUB(CURDATE(), INTERVAL 7 DAY), 20, 'ADJUSTMENT', 'Weekly shipment received'),
+(@chicken_id, DATE_SUB(CURDATE(), INTERVAL 6 DAY), 45, 'ADJUSTMENT', 'Weekly shipment received'),
+(@beef_id, DATE_SUB(CURDATE(), INTERVAL 6 DAY), 40, 'ADJUSTMENT', 'Weekly shipment received'),
+(@cheese_id, DATE_SUB(CURDATE(), INTERVAL 5 DAY), 30, 'ADJUSTMENT', 'Shipment received');
+
+-- Waste tracking over 30 days
+INSERT INTO inventory_usage (ingredient_id, usage_date, quantity_used, usage_type, note) VALUES
+(@tomato_id, DATE_SUB(CURDATE(), INTERVAL 28 DAY), 2.5, 'WASTE', 'Spoiled produce'),
+(@lettuce_id, DATE_SUB(CURDATE(), INTERVAL 26 DAY), 1.8, 'WASTE', 'Wilted leaves'),
+(@chicken_id, DATE_SUB(CURDATE(), INTERVAL 24 DAY), 3.2, 'WASTE', 'Passed expiration date'),
+(@tomato_id, DATE_SUB(CURDATE(), INTERVAL 22 DAY), 1.5, 'WASTE', 'Bruised tomatoes'),
+(@lettuce_id, DATE_SUB(CURDATE(), INTERVAL 20 DAY), 2.0, 'WASTE', 'Spoiled produce'),
+(@beef_id, DATE_SUB(CURDATE(), INTERVAL 18 DAY), 2.8, 'WASTE', 'Discoloration'),
+(@tomato_id, DATE_SUB(CURDATE(), INTERVAL 16 DAY), 1.2, 'WASTE', 'Overripe'),
+(@lettuce_id, DATE_SUB(CURDATE(), INTERVAL 14 DAY), 1.5, 'WASTE', 'Wilted'),
+(@chicken_id, DATE_SUB(CURDATE(), INTERVAL 12 DAY), 2.5, 'WASTE', 'Quality control'),
+(@cheese_id, DATE_SUB(CURDATE(), INTERVAL 10 DAY), 1.0, 'WASTE', 'Mold detected'),
+(@tomato_id, DATE_SUB(CURDATE(), INTERVAL 8 DAY), 1.8, 'WASTE', 'Spoiled produce'),
+(@lettuce_id, DATE_SUB(CURDATE(), INTERVAL 6 DAY), 1.3, 'WASTE', 'Wilted leaves'),
+(@beef_id, DATE_SUB(CURDATE(), INTERVAL 4 DAY), 2.2, 'WASTE', 'Quality control'),
+(@tomato_id, DATE_SUB(CURDATE(), INTERVAL 2 DAY), 0.9, 'WASTE', 'Damaged in storage');
+
+-- Sales usage from orders over 30 days
+INSERT INTO inventory_usage (ingredient_id, usage_date, quantity_used, usage_type, note) VALUES
+-- 4 weeks ago
+(@tomato_id, DATE_SUB(CURDATE(), INTERVAL 29 DAY), 5.5, 'SALE', 'Used in customer orders'),
+(@lettuce_id, DATE_SUB(CURDATE(), INTERVAL 29 DAY), 3.2, 'SALE', 'Used in customer orders'),
+(@chicken_id, DATE_SUB(CURDATE(), INTERVAL 27 DAY), 8.5, 'SALE', 'Used in customer orders'),
+(@beef_id, DATE_SUB(CURDATE(), INTERVAL 27 DAY), 6.8, 'SALE', 'Used in customer orders'),
+(@cheese_id, DATE_SUB(CURDATE(), INTERVAL 26 DAY), 4.2, 'SALE', 'Used in customer orders'),
+
+-- 3 weeks ago
+(@tomato_id, DATE_SUB(CURDATE(), INTERVAL 23 DAY), 6.2, 'SALE', 'Used in customer orders'),
+(@lettuce_id, DATE_SUB(CURDATE(), INTERVAL 23 DAY), 4.5, 'SALE', 'Used in customer orders'),
+(@chicken_id, DATE_SUB(CURDATE(), INTERVAL 22 DAY), 9.5, 'SALE', 'Used in customer orders'),
+(@beef_id, DATE_SUB(CURDATE(), INTERVAL 21 DAY), 7.2, 'SALE', 'Used in customer orders'),
+(@cheese_id, DATE_SUB(CURDATE(), INTERVAL 20 DAY), 5.5, 'SALE', 'Used in customer orders'),
+
+-- 2 weeks ago
+(@tomato_id, DATE_SUB(CURDATE(), INTERVAL 17 DAY), 7.8, 'SALE', 'Used in customer orders'),
+(@lettuce_id, DATE_SUB(CURDATE(), INTERVAL 17 DAY), 5.2, 'SALE', 'Used in customer orders'),
+(@chicken_id, DATE_SUB(CURDATE(), INTERVAL 15 DAY), 11.5, 'SALE', 'Used in customer orders'),
+(@beef_id, DATE_SUB(CURDATE(), INTERVAL 15 DAY), 8.8, 'SALE', 'Used in customer orders'),
+(@cheese_id, DATE_SUB(CURDATE(), INTERVAL 14 DAY), 6.2, 'SALE', 'Used in customer orders'),
+
+-- Last week
+(@tomato_id, DATE_SUB(CURDATE(), INTERVAL 11 DAY), 6.5, 'SALE', 'Used in customer orders'),
+(@lettuce_id, DATE_SUB(CURDATE(), INTERVAL 11 DAY), 4.8, 'SALE', 'Used in customer orders'),
+(@chicken_id, DATE_SUB(CURDATE(), INTERVAL 9 DAY), 10.2, 'SALE', 'Used in customer orders'),
+(@beef_id, DATE_SUB(CURDATE(), INTERVAL 9 DAY), 7.5, 'SALE', 'Used in customer orders'),
+(@cheese_id, DATE_SUB(CURDATE(), INTERVAL 8 DAY), 5.8, 'SALE', 'Used in customer orders'),
+
+-- This week
+(@tomato_id, DATE_SUB(CURDATE(), INTERVAL 5 DAY), 8.2, 'SALE', 'Used in customer orders'),
+(@lettuce_id, DATE_SUB(CURDATE(), INTERVAL 5 DAY), 5.5, 'SALE', 'Used in customer orders'),
+(@chicken_id, DATE_SUB(CURDATE(), INTERVAL 3 DAY), 12.5, 'SALE', 'Used in customer orders'),
+(@beef_id, DATE_SUB(CURDATE(), INTERVAL 3 DAY), 9.2, 'SALE', 'Used in customer orders'),
+(@cheese_id, DATE_SUB(CURDATE(), INTERVAL 2 DAY), 6.5, 'SALE', 'Used in customer orders'),
+
+-- Recent days
+(@tomato_id, DATE_SUB(CURDATE(), INTERVAL 1 DAY), 7.5, 'SALE', 'Used in customer orders'),
+(@lettuce_id, DATE_SUB(CURDATE(), INTERVAL 1 DAY), 4.2, 'SALE', 'Used in customer orders'),
+(@chicken_id, CURDATE(), 10.8, 'SALE', 'Used in customer orders'),
+(@beef_id, CURDATE(), 8.5, 'SALE', 'Used in customer orders'),
+(@cheese_id, CURDATE(), 5.2, 'SALE', 'Used in customer orders');
+
+-- ==========================================
+-- 15. SALES RECORDS (from paid orders)
+-- ==========================================
+
+INSERT INTO sale (order_id, sale_date, sale_amount)
+SELECT order_id, DATE(order_datetime), total_amount
+FROM customer_order
+WHERE payment_status = 'PAID'
+AND order_id NOT IN (SELECT order_id FROM sale WHERE order_id IS NOT NULL);
+
+-- ==========================================
+-- 16. FIX ORDER TOTALS (Recalculate from items)
+-- ==========================================
+
+UPDATE customer_order co
+SET total_amount = (
+    SELECT COALESCE(SUM(oi.quantity * oi.unit_price), 0)
+    FROM order_item oi
+    WHERE oi.order_id = co.order_id
+);
+
 SET FOREIGN_KEY_CHECKS = 1;
 
-SELECT 'Database seeded successfully!' AS Status;
+-- ==========================================
+-- DATA LOADING COMPLETE
+-- ==========================================
+
+SELECT '===========================================' AS '';
+SELECT 'DATABASE POPULATED SUCCESSFULLY!' AS '';
+SELECT '===========================================' AS '';
 SELECT CONCAT(COUNT(*), ' employees') AS Employees FROM employee;
 SELECT CONCAT(COUNT(*), ' ingredients') AS Ingredients FROM ingredient;
 SELECT CONCAT(COUNT(*), ' menu items') AS Menu_Items FROM menu_item;
 SELECT CONCAT(COUNT(*), ' tables') AS Tables FROM restaurant_table;
 SELECT CONCAT(COUNT(*), ' active orders') AS Active_Orders FROM customer_order WHERE payment_status = 'UNPAID';
+SELECT CONCAT(COUNT(*), ' paid orders') AS Paid_Orders FROM customer_order WHERE payment_status = 'PAID';
+SELECT CONCAT(COUNT(*), ' inventory usage records') AS Inventory_Usage FROM inventory_usage;
 SELECT CONCAT(COUNT(*), ' schedules') AS Schedules FROM schedule;
-SELECT CONCAT(COUNT(*), ' staff requests') AS Staff_Requests FROM staff_request;
+SELECT CONCAT(COUNT(*), ' payroll records') AS Payroll_Records FROM payroll;
 
 SELECT '===========================================' AS '';
 SELECT 'LOGIN CREDENTIALS (password: password123)' AS '';
